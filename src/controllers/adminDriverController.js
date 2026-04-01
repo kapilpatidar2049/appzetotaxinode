@@ -6,6 +6,7 @@ const RoleUser = require("../models/RoleUser");
 const Driver = require("../models/Driver");
 const DriverWallet = require("../models/DriverWallet");
 const Request = require("../models/Request");
+const RequestRating = require("../models/RequestRating");
 
 function ok(res, data, message = "success") {
   return res.json({ success: true, message, data });
@@ -437,6 +438,38 @@ async function getDriverRequests(req, res, next) {
   }
 }
 
+async function getDriverReviewHistory(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return err(res, 400, "Invalid driver id");
+    }
+    const { page, limit, skip } = parsePage(req);
+    const filter = { driver_id: id };
+    const [items, total] = await Promise.all([
+      RequestRating.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("user_id", "name mobile email")
+        .populate("request_id", "request_number is_completed is_cancelled")
+        .lean(),
+      RequestRating.countDocuments(filter),
+    ]);
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
 async function listDeletedDrivers(req, res, next) {
   try {
     const { page, limit, skip } = parsePage(req);
@@ -559,6 +592,7 @@ module.exports = {
   updateDriver,
   deleteDriver,
   getDriverRequests,
+  getDriverReviewHistory,
   listDeletedDrivers,
   getDeletedDriverProfile,
   restoreDeletedDriver,

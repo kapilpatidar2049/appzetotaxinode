@@ -11,6 +11,8 @@ router.patch("/deleted/:id/restore", adminDriverController.restoreDeletedDriver)
 router.delete("/deleted/:id", adminDriverController.deleteDeletedDriverPermanently);
 
 router.get("/:id/requests", adminDriverController.getDriverRequests);
+router.get("/:id/review-history", adminDriverController.getDriverReviewHistory);
+router.get("/:id/reviews", adminDriverController.getDriverReviewHistory);
 
 router.get("/:id", adminDriverController.getDriver);
 router.patch("/:id", adminDriverController.updateDriver);

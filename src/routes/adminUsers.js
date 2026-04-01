@@ -14,6 +14,7 @@ router.delete("/deleted/:id", adminUserController.deletePermanentlyFromDeleted);
 router.get("/:id/wallet", adminUserController.getWallet);
 router.get("/:id/wallet-history", adminUserController.getWalletHistory);
 router.get("/:id/reviews", adminUserController.getReviewHistory);
+router.get("/:id/review-history", adminUserController.getReviewHistory);
 router.get("/:id/requests", adminUserController.getRequests);
 router.get("/:id/requests/:request_id", adminUserController.getRequestDetail);
 

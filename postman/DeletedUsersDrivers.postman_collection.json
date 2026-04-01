@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "Admin Deleted Users & Drivers",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Small collection for deleted users/drivers management + user/driver review history APIs."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "adminToken", "value": "" },
+    { "key": "adminUserId", "value": "" },
+    { "key": "adminDriverId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Deleted Users",
+      "item": [
+        {
+          "name": "List Deleted Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/users/deleted"
+          }
+        },
+        {
+          "name": "Deleted User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/users/deleted/{{adminUserId}}/profile"
+          }
+        },
+        {
+          "name": "Restore Deleted User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/users/deleted/{{adminUserId}}/restore"
+          }
+        },
+        {
+          "name": "Delete Deleted User Permanently",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/users/deleted/{{adminUserId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deleted Drivers",
+      "item": [
+        {
+          "name": "List Deleted Drivers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/drivers/deleted"
+          }
+        },
+        {
+          "name": "Deleted Driver Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/drivers/deleted/{{adminDriverId}}/profile"
+          }
+        },
+        {
+          "name": "Restore Deleted Driver",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/drivers/deleted/{{adminDriverId}}/restore"
+          }
+        },
+        {
+          "name": "Delete Deleted Driver Permanently",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/drivers/deleted/{{adminDriverId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Review History",
+      "item": [
+        {
+          "name": "User Review History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/users/{{adminUserId}}/review-history"
+          }
+        },
+        {
+          "name": "Driver Review History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "url": "{{baseUrl}}/api/v1/admin/drivers/{{adminDriverId}}/review-history"
+          }
+        }
+      ]
+    }
+  ]
+}
