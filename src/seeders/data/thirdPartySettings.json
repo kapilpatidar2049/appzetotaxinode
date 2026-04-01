@@ -1,0 +1,596 @@
+{
+  "payment_settings": [
+    {
+      "key": "payment_option",
+      "value": "cash,card,wallet",
+      "module": "payment"
+    },
+    {
+      "key": "enable_paystack",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "paystack_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "paystack_test_secret_key",
+      "value": "Your Paystack Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "paystack_production_secret_key",
+      "value": "Your Paystack Production Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "paystack_test_publishable_key",
+      "value": "Your Paystack Test Publish Key",
+      "module": "payment"
+    },
+    {
+      "key": "paystack_production_publishable_key",
+      "value": "Your Paystack Production Publish Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_cashfree",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "cash_free_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "cash_free_secret_key",
+      "value": "Enter Cashfree Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "cash_free_production_secret_key",
+      "value": "Enter Cashfree Production Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "cash_free_app_id",
+      "value": "Enter Cashfree Test App ID",
+      "module": "payment"
+    },
+    {
+      "key": "cash_free_production_app_id",
+      "value": "Enter Cashfree Production App ID",
+      "module": "payment"
+    },
+    {
+      "key": "enable_mercadopago",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "mercadopago_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "mercadopago_test_public_key",
+      "value": "Enter Mercadopago Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "mercadopago_live_public_key",
+      "value": "Enter Mercadopago Production Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "mercadopago_test_access_token",
+      "value": "Enter Mercadopago Test Access Token",
+      "module": "payment"
+    },
+    {
+      "key": "mercadopago_live_access_token",
+      "value": "Enter Mercadopago Production Access Token",
+      "module": "payment"
+    },
+    {
+      "key": "enable_stripe",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "stripe_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "stripe_test_secret_key",
+      "value": "Enter Stripe Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "stripe_live_secret_key",
+      "value": "Enter Stripe Production Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "stripe_test_publishable_key",
+      "value": "Enter Stripe Test Publish Key",
+      "module": "payment"
+    },
+    {
+      "key": "stripe_live_publishable_key",
+      "value": "Enter Stripe Production Publish Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_xendit",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "xendi_pay_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "xendi_pay_test_api_key",
+      "value": "Enter Xendi Pay Test Api Key",
+      "module": "payment"
+    },
+    {
+      "key": "xendit_pay_live_api_key",
+      "value": "Enter Xendit Pay Live Api Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_flutter_wave",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "flutter_wave_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "flutter_wave_test_secret_key",
+      "value": "Enter Flutter-Wave Test Public Key",
+      "module": "payment"
+    },
+    {
+      "key": "flutter_wave_production_secret_key",
+      "value": "Enter Flutter-Wave Live Public Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_razor_pay",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "razor_pay_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "razor_pay_test_api_key",
+      "value": "Enter Razor Pay Test Api Key",
+      "module": "payment"
+    },
+    {
+      "key": "razor_pay_live_api_key",
+      "value": "Enter Razor Pay Live Api Key",
+      "module": "payment"
+    },
+    {
+      "key": "razor_pay_secrect_key",
+      "value": "Enter Razor Pay Secrect key",
+      "module": "payment"
+    },
+    {
+      "key": "razor_pay_test_secrect_key",
+      "value": "Enter Razor pay Test Secrect Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_khalti_pay",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "khalti_pay_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "khalti_pay_test_api_key",
+      "value": "Enter Khalti Pay Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "khalti_pay_live_api_key",
+      "value": "Enter Khalti Pay Live Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_flexpaie",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "flexpaie_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "flexpaie_test_bearer_token",
+      "value": "Enter FlexPaie Test Bearer Token",
+      "module": "payment"
+    },
+    {
+      "key": "flexpaie_production_bearer_token",
+      "value": "Enter FlexPaie Live Bearer Token",
+      "module": "payment"
+    },
+    {
+      "key": "enable_openpix",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "openpix_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "openpix_test_api_key",
+      "value": "Enter Open Pix Test Public Key",
+      "module": "payment"
+    },
+    {
+      "key": "openpix_live_api_key",
+      "value": "Enter Openpix Live Public Key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_myfatoora",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "myfatoora_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "myfatoora_test_token",
+      "value": "Enter MyFatoora Test Bearer Token",
+      "module": "payment"
+    },
+    {
+      "key": "myfatoora_live_token",
+      "value": "Enter MyFatoora Live Bearer Token",
+      "module": "payment"
+    },
+    {
+      "key": "enable_paymongo",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "paymongo_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "paymongo_test_secret_key",
+      "value": "Enter Paymongo Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "paymongo_live_secret_key",
+      "value": "Enter Paymongo Live Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "mail_mailer",
+      "value": "smtp",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_host",
+      "value": "smtp.gmail.com",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_port",
+      "value": "587",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_username",
+      "value": "misoftwares2021@gmail.com",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_password",
+      "value": "lsnvldfnsdfkvdf",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_encryption",
+      "value": "tls",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_from_address",
+      "value": "misoftwares2021@gmail.com",
+      "module": "mail_config"
+    },
+    {
+      "key": "mail_from_name",
+      "value": "misoftwares",
+      "module": "mail_config"
+    },
+    {
+      "key": "map_type",
+      "value": "google_map",
+      "module": "map"
+    },
+    {
+      "key": "enable_vase_map",
+      "value": "1",
+      "module": "map"
+    },
+    {
+      "key": "google_map_key",
+      "value": "Your Google Map Key",
+      "module": "map"
+    },
+    {
+      "key": "google_map_key_for_distance_matrix",
+      "value": "your_map_key",
+      "module": "map"
+    },
+    {
+      "key": "firebase_database_url",
+      "value": "https:\n         ",
+      "module": "firebase"
+    },
+    {
+      "key": "firebase_api_key",
+      "value": "your-api-key",
+      "module": "firebase"
+    },
+    {
+      "key": "firebase_auth_domain",
+      "value": "your-auth-domain",
+      "module": "firebase"
+    },
+    {
+      "key": "firebase_project_id",
+      "value": "your-firebase-project-id",
+      "module": "firebase"
+    },
+    {
+      "key": "firebase_storage_bucket",
+      "value": "your-firebase-storage-bucket",
+      "module": "firebase"
+    },
+    {
+      "key": "firebase_messaging_sender_id",
+      "value": "your-firebase-messaging-sender-id",
+      "module": "firebase"
+    },
+    {
+      "key": "firebase_app_id",
+      "value": "your-app-id",
+      "module": "firebase"
+    },
+    {
+      "key": "reacptcha_site_key",
+      "value": "your-recaptcha-site-key",
+      "module": "recaptcha"
+    },
+    {
+      "key": "reacptcha_secret_key",
+      "value": "your-recaptcha-secret-key",
+      "module": "recaptcha"
+    },
+    {
+      "key": "enable_recaptcha",
+      "value": "0",
+      "module": "recaptcha"
+    },
+    {
+      "key": "enable_firebase_otp",
+      "value": "1",
+      "module": "sms"
+    },
+    {
+      "key": "enable_twilio",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "twilio_sid",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "twilio_token",
+      "value": "Your Twilio Token",
+      "module": "sms"
+    },
+    {
+      "key": "twilio_from_number",
+      "value": "Your Twilio Mobile Number",
+      "module": "sms"
+    },
+    {
+      "key": "enable_sparrow",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "sparrow_sender_id",
+      "value": "Your Sparrow Sender ID",
+      "module": "sms"
+    },
+    {
+      "key": "sparrow_token",
+      "value": "Your Sparrow Token",
+      "module": "sms"
+    },
+    {
+      "key": "enable_msg91",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "msg91_template_id",
+      "value": "Your MSG91 Template ID",
+      "module": "sms"
+    },
+    {
+      "key": "msg91_auth_key",
+      "value": "Your MSG91 Token",
+      "module": "sms"
+    },
+    {
+      "key": "enable_sms_ala",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "smsala_api_key",
+      "value": "Your SMS ALA Api Key",
+      "module": "sms"
+    },
+    {
+      "key": "smsala_secrect_key",
+      "value": "Your SMS ALA Api Secret Key",
+      "module": "sms"
+    },
+    {
+      "key": "smsala_token",
+      "value": "Your SMS ALA Token",
+      "module": "sms"
+    },
+    {
+      "key": "smsala_from_number",
+      "value": "Your SMS ALA Mobile Number",
+      "module": "sms"
+    },
+    {
+      "key": "enable_stripe_authorization",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "enable_kudi_sms_api_key",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "kudi_sms_sender_id",
+      "value": "Your Kudi Sender ID",
+      "module": "sms"
+    },
+    {
+      "key": "kudi_sms_api_key",
+      "value": "Your Kudi Api Key",
+      "module": "sms"
+    },
+    {
+      "key": "enable_paypal",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_environment",
+      "value": "sandbox",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_sandbox_client_id",
+      "value": "your-Client-Id",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_sandbox_client_secret",
+      "value": "your-Client-secret",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_sandbox_app_id",
+      "value": "your-App-Id",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_client_id",
+      "value": "your-key",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_client_secret",
+      "value": "your-key",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_app_id",
+      "value": "your-key",
+      "module": "payment"
+    },
+    {
+      "key": "paypal_notify_url",
+      "value": "your-key",
+      "module": "payment"
+    },
+    {
+      "key": "enable_fedapay",
+      "value": "0",
+      "module": "payment"
+    },
+    {
+      "key": "fedapay_environment",
+      "value": "test",
+      "module": "payment"
+    },
+    {
+      "key": "fedapay_test_secret_key",
+      "value": "Enter Fedapay Test Secret Key",
+      "module": "payment"
+    },
+    {
+      "key": "fedapay_live_secret_key",
+      "value": "Enter Fedapay Live Secret Key",
+      "module": "payment"
+    }
+  ],
+  "invoice_configuration": [
+    {
+      "key": "invoice_logo",
+      "value": "rest.png",
+      "module": "invoice_configuration"
+    },
+    {
+      "key": "privacy_policy_link",
+      "value": "Test",
+      "module": "invoice_configuration"
+    },
+    {
+      "key": "terms_and_conditions_link",
+      "value": "https://test-server.ondemandappz.com/terms",
+      "module": "invoice_configuration"
+    },
+    {
+      "key": "invoice_email",
+      "value": "dilip@misoftwares.com",
+      "module": "invoice_configuration"
+    }
+  ]
+}
