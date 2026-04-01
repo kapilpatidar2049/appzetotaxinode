@@ -1,6 +1,5 @@
 /**
- * JSON equivalents of Laravel web.php routes that already returned JSON
- * (dashboard widgets) or Inertia page props that a headless admin can consume.
+ * Admin dashboard JSON endpoints consumed by frontend clients.
  */
 
 const Setting = require("../models/Setting");
@@ -64,7 +63,7 @@ async function ownerEarnings(req, res, next) {
   }
 }
 
-/** Laravel GET /dashboard — Inertia; we expose props the page would need (no HTML). */
+/** Dashboard page bootstrap payload. */
 async function dashboardPageProps(req, res, next) {
   try {
     const keys = [
@@ -89,26 +88,67 @@ async function dashboardPageProps(req, res, next) {
     };
     return res.json({
       page: "pages/dashboard/index",
-      component: "Inertia→JSON stub",
       firebaseConfig,
-      message:
-        "Laravel returned Inertia::render for GET /dashboard; use the JSON widget endpoints under /dashboard/* for data.",
+      message: "Dashboard bootstrap payload.",
     });
   } catch (e) {
     next(e);
   }
 }
 
-/** Laravel GET /overall-menu — Inertia only */
+/** Overall menu bootstrap payload. */
 function overallMenu(req, res) {
+  const ownerManagement = [
+    {
+      key: "owner-dashboard",
+      label: "Owner Dashboard",
+      path: "/owner-dashboard",
+    },
+    {
+      key: "manage-owners",
+      label: "Manage Owners",
+      path: "/manage-owners",
+    },
+    {
+      key: "owner-wallet",
+      label: "Owner Wallet",
+      path: "/owner-wallet",
+    },
+    {
+      key: "fleet-management",
+      label: "Fleet Management",
+      path: "/fleet-management",
+    },
+    {
+      key: "blocked-fleet-drivers",
+      label: "Blocked Fleet Drivers",
+      path: "/blocked-fleet-drivers",
+    },
+    {
+      key: "fleet-needed-document",
+      label: "Fleet Needed Document",
+      path: "/fleet-needed-document",
+    },
+    {
+      key: "manage-fleet",
+      label: "Manage Fleet",
+      path: "/manage-fleet",
+    },
+    {
+      key: "owner-needed-document",
+      label: "Owner Needed Document",
+      path: "/owner-needed-document",
+    },
+  ];
+
   return res.json({
     page: "pages/overall-menu",
-    component: "Inertia→JSON stub",
-    message: "No HTML; mount your SPA route client-side.",
+    ownerManagement,
+    message: "Overall menu bootstrap payload.",
   });
 }
 
-/** Laravel GET /owner-dashboard — Inertia shell for owners */
+/** Owner dashboard bootstrap payload. */
 async function ownerDashboardPageProps(req, res, next) {
   try {
     const keys = [
@@ -133,9 +173,8 @@ async function ownerDashboardPageProps(req, res, next) {
     };
     return res.json({
       page: "pages/owner-dashboard/index",
-      component: "Inertia→JSON stub",
       firebaseSettings,
-      message: "Use /owner-dashboard/data and /owner-dashboard/earnings for JSON series.",
+      message: "Use /owner-dashboard/data and /owner-dashboard/earnings for chart data.",
     });
   } catch (e) {
     next(e);

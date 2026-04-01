@@ -7,11 +7,16 @@ const router = express.Router();
 router.get("/users", adminWalletController.listUserWallets);
 router.get("/users/:user_id", adminWalletController.getUserWallet);
 router.post("/users/:user_id/adjust", adminWalletController.adjustUserWallet);
+router.post("/users/:user_id/add", adminWalletController.addUserWalletAmount);
+router.post("/users/:user_id/deduct", adminWalletController.deductUserWalletAmount);
 
 // Driver wallets
 router.get("/drivers", adminWalletController.listDriverWallets);
+router.get("/drivers/negative", adminWalletController.listNegativeDriverWallets);
 router.get("/drivers/:driver_id", adminWalletController.getDriverWallet);
 router.post("/drivers/:driver_id/adjust", adminWalletController.adjustDriverWallet);
+router.post("/drivers/:driver_id/add", adminWalletController.addDriverWalletAmount);
+router.post("/drivers/:driver_id/deduct", adminWalletController.deductDriverWalletAmount);
 
 // Withdrawal requests
 router.get("/withdrawals", adminWalletController.listWithdrawals);

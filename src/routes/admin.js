@@ -29,6 +29,7 @@ adminRoutes.use("/zones", require("./adminZones"));
 adminRoutes.use("/types", require("./adminVehicleTypes"));
 adminRoutes.use("/goods-types", require("./adminGoodsTypes"));
 adminRoutes.use("/wallet", require("./adminWallet"));
+adminRoutes.use("/owner-management", require("./adminOwnerManagement"));
 adminRoutes.use("/rewards", require("./adminRewards"));
 adminRoutes.use("/common", require("./adminCommonContent"));
 adminRoutes.use("/support-tickets", require("./adminSupportTickets"));

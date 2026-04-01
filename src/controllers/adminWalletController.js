@@ -99,34 +99,98 @@ async function adjustUserWallet(req, res, next) {
     const { user_id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(user_id)) return err(res, 400, "Invalid user id");
 
-    const { amount, remarks } = req.body || {};
+    const { amount, remarks, payment_type } = req.body || {};
     const num = Number(amount);
-    if (!amount || Number.isNaN(num) || !Number.isFinite(num)) {
-      return err(res, 422, "Valid amount is required");
+    if (!amount || Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+      return err(res, 422, "Valid positive amount is required");
     }
+    if (!payment_type || !["credit", "debit"].includes(String(payment_type).toLowerCase())) {
+      return err(res, 422, "payment_type must be credit or debit");
+    }
+    const paymentType = String(payment_type).toLowerCase();
+    const signedAmount = paymentType === "debit" ? -num : num;
 
     const user = await User.findById(user_id).select("_id").lean();
     if (!user) return err(res, 404, "User not found");
 
     const wallet = await ensureUserWallet(user_id);
-    wallet.amount_balance = Number(wallet.amount_balance || 0) + num;
-    if (num > 0) {
+    wallet.amount_balance = Number(wallet.amount_balance || 0) + signedAmount;
+    if (paymentType === "credit") {
       wallet.amount_added = Number(wallet.amount_added || 0) + num;
     }
     await wallet.save();
 
     await UserWalletHistory.create({
       user_id,
-      amount: num,
+      amount: signedAmount,
       remarks: remarks || null,
-      transaction_alias: "ADMIN_ADJUSTMENT",
+      transaction_alias: paymentType === "credit" ? "ADMIN_CREDIT" : "ADMIN_DEBIT",
     });
 
     return ok(
       res,
-      { user_id, amount: num, balance: wallet.amount_balance },
+      { user_id, amount: signedAmount, payment_type: paymentType, balance: wallet.amount_balance },
       "User wallet adjusted"
     );
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function addUserWalletAmount(req, res, next) {
+  try {
+    const { user_id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(user_id)) return err(res, 400, "Invalid user id");
+    const { amount, remarks } = req.body || {};
+    const num = Number(amount);
+    if (!amount || Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+      return err(res, 422, "Valid positive amount is required");
+    }
+    const user = await User.findById(user_id).select("_id").lean();
+    if (!user) return err(res, 404, "User not found");
+
+    const wallet = await ensureUserWallet(user_id);
+    wallet.amount_balance = Number(wallet.amount_balance || 0) + num;
+    wallet.amount_added = Number(wallet.amount_added || 0) + num;
+    await wallet.save();
+
+    await UserWalletHistory.create({
+      user_id,
+      amount: num,
+      remarks: remarks || null,
+      transaction_alias: "ADMIN_CREDIT",
+    });
+
+    return ok(res, { user_id, amount: num, balance: wallet.amount_balance }, "Amount added");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function deductUserWalletAmount(req, res, next) {
+  try {
+    const { user_id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(user_id)) return err(res, 400, "Invalid user id");
+    const { amount, remarks } = req.body || {};
+    const num = Number(amount);
+    if (!amount || Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+      return err(res, 422, "Valid positive amount is required");
+    }
+    const user = await User.findById(user_id).select("_id").lean();
+    if (!user) return err(res, 404, "User not found");
+
+    const wallet = await ensureUserWallet(user_id);
+    wallet.amount_balance = Number(wallet.amount_balance || 0) - num;
+    await wallet.save();
+
+    await UserWalletHistory.create({
+      user_id,
+      amount: -num,
+      remarks: remarks || null,
+      transaction_alias: "ADMIN_DEBIT",
+    });
+
+    return ok(res, { user_id, amount: -num, balance: wallet.amount_balance }, "Amount deducted");
   } catch (e) {
     next(e);
   }
@@ -144,6 +208,35 @@ async function listDriverWallets(req, res, next) {
         .populate("driver_id", "name mobile email")
         .lean(),
       DriverWallet.countDocuments({}),
+    ]);
+
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+// Drivers with negative wallet balance
+async function listNegativeDriverWallets(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const filter = { amount_balance: { $lt: 0 } };
+    const [items, total] = await Promise.all([
+      DriverWallet.find(filter)
+        .sort({ amount_balance: 1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("driver_id", "name mobile email owner_id")
+        .lean(),
+      DriverWallet.countDocuments(filter),
     ]);
 
     return ok(res, {
@@ -189,33 +282,110 @@ async function adjustDriverWallet(req, res, next) {
     const { driver_id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(driver_id)) return err(res, 400, "Invalid driver id");
 
-    const { amount, remarks } = req.body || {};
+    const { amount, remarks, payment_type } = req.body || {};
     const num = Number(amount);
-    if (!amount || Number.isNaN(num) || !Number.isFinite(num)) {
-      return err(res, 422, "Valid amount is required");
+    if (!amount || Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+      return err(res, 422, "Valid positive amount is required");
     }
+    if (!payment_type || !["credit", "debit"].includes(String(payment_type).toLowerCase())) {
+      return err(res, 422, "payment_type must be credit or debit");
+    }
+    const paymentType = String(payment_type).toLowerCase();
+    const signedAmount = paymentType === "debit" ? -num : num;
 
     const driver = await Driver.findById(driver_id).select("_id").lean();
     if (!driver) return err(res, 404, "Driver not found");
 
     const wallet = await ensureDriverWallet(driver_id);
-    wallet.amount_balance = Number(wallet.amount_balance || 0) + num;
-    if (num > 0) {
+    wallet.amount_balance = Number(wallet.amount_balance || 0) + signedAmount;
+    if (paymentType === "credit") {
       wallet.amount_added = Number(wallet.amount_added || 0) + num;
     }
     await wallet.save();
 
     await DriverWalletHistory.create({
       driver_id,
+      amount: signedAmount,
+      remarks: remarks || null,
+      transaction_alias: paymentType === "credit" ? "ADMIN_CREDIT" : "ADMIN_DEBIT",
+    });
+
+    return ok(
+      res,
+      {
+        driver_id,
+        amount: signedAmount,
+        payment_type: paymentType,
+        balance: wallet.amount_balance,
+      },
+      "Driver wallet adjusted"
+    );
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function addDriverWalletAmount(req, res, next) {
+  try {
+    const { driver_id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(driver_id)) return err(res, 400, "Invalid driver id");
+    const { amount, remarks } = req.body || {};
+    const num = Number(amount);
+    if (!amount || Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+      return err(res, 422, "Valid positive amount is required");
+    }
+    const driver = await Driver.findById(driver_id).select("_id").lean();
+    if (!driver) return err(res, 404, "Driver not found");
+
+    const wallet = await ensureDriverWallet(driver_id);
+    wallet.amount_balance = Number(wallet.amount_balance || 0) + num;
+    wallet.amount_added = Number(wallet.amount_added || 0) + num;
+    await wallet.save();
+
+    await DriverWalletHistory.create({
+      driver_id,
       amount: num,
       remarks: remarks || null,
-      transaction_alias: "ADMIN_ADJUSTMENT",
+      transaction_alias: "ADMIN_CREDIT",
     });
 
     return ok(
       res,
       { driver_id, amount: num, balance: wallet.amount_balance },
-      "Driver wallet adjusted"
+      "Amount added"
+    );
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function deductDriverWalletAmount(req, res, next) {
+  try {
+    const { driver_id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(driver_id)) return err(res, 400, "Invalid driver id");
+    const { amount, remarks } = req.body || {};
+    const num = Number(amount);
+    if (!amount || Number.isNaN(num) || !Number.isFinite(num) || num <= 0) {
+      return err(res, 422, "Valid positive amount is required");
+    }
+    const driver = await Driver.findById(driver_id).select("_id").lean();
+    if (!driver) return err(res, 404, "Driver not found");
+
+    const wallet = await ensureDriverWallet(driver_id);
+    wallet.amount_balance = Number(wallet.amount_balance || 0) - num;
+    await wallet.save();
+
+    await DriverWalletHistory.create({
+      driver_id,
+      amount: -num,
+      remarks: remarks || null,
+      transaction_alias: "ADMIN_DEBIT",
+    });
+
+    return ok(
+      res,
+      { driver_id, amount: -num, balance: wallet.amount_balance },
+      "Amount deducted"
     );
   } catch (e) {
     next(e);
@@ -307,9 +477,14 @@ module.exports = {
   listUserWallets,
   getUserWallet,
   adjustUserWallet,
+  addUserWalletAmount,
+  deductUserWalletAmount,
   listDriverWallets,
+  listNegativeDriverWallets,
   getDriverWallet,
   adjustDriverWallet,
+  addDriverWalletAmount,
+  deductDriverWalletAmount,
   listWithdrawals,
   getWithdrawal,
   updateWithdrawalStatus,

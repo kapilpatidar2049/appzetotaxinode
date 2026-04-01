@@ -52,9 +52,16 @@ async function listDrivers(req, res, next) {
     const search = (req.query.search || "").trim();
     const includeOwner =
       req.query.include_owner === "1" || req.query.include_owner === "true";
+    const driverType = String(req.query.driver_type || "").toLowerCase();
 
     const parts = [];
-    if (!includeOwner) {
+    if (driverType === "normal") {
+      parts.push({
+        $or: [{ owner_id: null }, { owner_id: { $exists: false } }],
+      });
+    } else if (driverType === "fleet") {
+      parts.push({ owner_id: { $exists: true, $ne: null } });
+    } else if (!includeOwner) {
       parts.push({
         $or: [{ owner_id: null }, { owner_id: { $exists: false } }],
       });
@@ -108,6 +115,7 @@ async function listDrivers(req, res, next) {
       if (row.user_id && typeof row.user_id === "object") {
         delete row.user_id.referred_by;
       }
+      row.driver_type = row.owner_id ? "fleet" : "normal";
       results.push(row);
     }
 

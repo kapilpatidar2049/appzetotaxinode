@@ -31,7 +31,6 @@ async function landingHome(req, res, next) {
     return json(res, {
       page: "landing.index",
       data: { quick_links: links },
-      message: "Landing homepage (JSON). In Laravel this renders Blade/Inertia.",
     });
   } catch (e) {
     next(e);
@@ -113,7 +112,7 @@ async function landingDmv(req, res, next) {
 function miLoginStub(req, res) {
   return json(res, {
     page: "overrideloginToDashboard",
-    message: "Admin override login is not implemented in Node (Laravel mi-login).",
+    message: "Admin override login is not implemented.",
   });
 }
 
@@ -168,7 +167,7 @@ function paymentGatewayStub(name) {
       gateway: name,
       query: req.query,
       message:
-        "Payment gateway entrypoint stub (Laravel redirects to provider). Implement redirect or API flow in Node.",
+        "Payment gateway entrypoint stub. Implement provider redirect or API flow.",
     });
 }
 
@@ -176,7 +175,7 @@ function staticViewStub(view) {
   return (req, res) =>
     json(res, {
       view,
-      message: "Laravel Blade/Inertia view; no HTML in Node API.",
+      message: "This endpoint returns JSON only. HTML rendering is handled by frontend.",
     });
 }
 
@@ -186,7 +185,7 @@ function notImplemented(req, res) {
     {
       success: false,
       message:
-        "This Laravel web route is not implemented in Node. For admin dashboard JSON (Laravel web.php widgets), use GET /api/v1/admin/dashboard/* with JWT; extend registerWebRoutes / webController for public /web stubs.",
+        "This web route is not implemented in backend API. Use /api/v1/admin/dashboard/* (JWT) for admin dashboard JSON, or extend web routes as needed.",
       method: req.method,
       path: req.originalUrl.replace(/^\/web/, "") || "/",
     },

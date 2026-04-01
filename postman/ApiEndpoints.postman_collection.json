@@ -2,12 +2,12 @@
   "info": {
     "name": "Taxi Backend — All APIs (Node)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "**Node backend surface area** (JSON): `api/v1` mobile API (mirrors `routes/api/v1/*.php`), CMS under `/api/*-content`, public JSON stubs under `/web/*` from `registerWebRoutes.js`, admin REST + same web-style stubs under `/api/v1/admin/*`. **Not included:** full Laravel `routes/web.php` admin SPA (Inertia/Blade, hundreds of HTML dashboard routes) — those are not ported 1:1 to this API. Regenerate: `npm run postman:collection`. Set `baseUrl` (e.g. http://localhost:4000). Use `token` / `driverToken` / `ownerToken` / `dispatcherToken` / `adminToken` as appropriate."
+    "description": "**Node backend surface area** (JSON): `api/v1` mobile API (mirrors `routes/api/v1/*.php`), CMS under `/api/*-content`, public JSON stubs under `/web/*` from `registerWebRoutes.js`, admin REST + same web-style stubs under `/api/v1/admin/*`. **Not included:** full Laravel `routes/web.php` admin SPA (Inertia/Blade, hundreds of HTML dashboard routes) — those are not ported 1:1 to this API. Regenerate: `npm run postman:collection`. Set `baseUrl` (e.g. https://taxi-a276.onrender.com). Use `token` / `driverToken` / `ownerToken` / `dispatcherToken` / `adminToken` as appropriate."
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:4000"
+      "value": "https://taxi-a276.onrender.com"
     },
     {
       "key": "token",

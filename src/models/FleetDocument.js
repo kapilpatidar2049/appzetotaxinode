@@ -1,16 +1,16 @@
 const mongoose = require("mongoose");
 
-const DriverDocumentSchema = new mongoose.Schema(
+const FleetDocumentSchema = new mongoose.Schema(
   {
-    driver_id: {
+    fleet_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Driver",
+      ref: "Fleet",
       required: true,
       index: true,
     },
-    driver_needed_document_id: {
+    fleet_needed_document_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "DriverNeededDocument",
+      ref: "FleetNeededDocument",
       index: true,
     },
     document_name: String,
@@ -24,12 +24,9 @@ const DriverDocumentSchema = new mongoose.Schema(
     approve: { type: Boolean, default: false, index: true },
     rejected_reason: String,
     reviewed_at: Date,
-    expired_at: Date,
   },
   { timestamps: true }
 );
 
 module.exports =
-  mongoose.models.DriverDocument ||
-  mongoose.model("DriverDocument", DriverDocumentSchema);
-
+  mongoose.models.FleetDocument || mongoose.model("FleetDocument", FleetDocumentSchema);

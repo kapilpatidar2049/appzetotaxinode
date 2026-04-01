@@ -4,6 +4,9 @@ const Fleet = require("../models/Fleet");
 const OwnerNeededDocument = require("../models/OwnerNeededDocument");
 const FleetNeededDocument = require("../models/FleetNeededDocument");
 const Driver = require("../models/Driver");
+const DriverNeededDocument = require("../models/DriverNeededDocument");
+const DriverDocument = require("../models/DriverDocument");
+const FleetDocument = require("../models/FleetDocument");
 const User = require("../models/User");
 const OwnerHiredDriver = require("../models/OwnerHiredDriver");
 const Request = require("../models/Request");
@@ -18,6 +21,11 @@ function fail(res, message = "Internal server error", code = 500) {
 
 async function getOwnerByUserId(userId) {
   return Owner.findOne({ user_id: userId }).lean();
+}
+
+function parseDocumentFor(value) {
+  const v = String(value || "both").toLowerCase();
+  return ["normal", "fleet", "both"].includes(v) ? v : "both";
 }
 
 // FleetController
@@ -76,6 +84,64 @@ async function assignDriver(req, res) {
     const oid = owner._id || owner.id;
     const fleetRow = await Fleet.findOne({ _id: fleet, owner_id: oid }).lean();
     if (!fleetRow) return fail(res, "Fleet not found", 404);
+    const driverRow = await Driver.findById(driver_id).lean();
+    if (!driverRow) return fail(res, "Driver not found", 404);
+
+    const neededFleetDocs = await FleetNeededDocument.find({
+      active: true,
+      is_required: true,
+    })
+      .select("_id")
+      .lean();
+    if (neededFleetDocs.length) {
+      const approvedFleetDocs = await FleetDocument.find({
+        fleet_id: fleet,
+        fleet_needed_document_id: { $in: neededFleetDocs.map((d) => d._id) },
+        status: "approved",
+      })
+        .select("fleet_needed_document_id")
+        .lean();
+      const approvedSet = new Set(approvedFleetDocs.map((d) => String(d.fleet_needed_document_id)));
+      const missing = neededFleetDocs
+        .map((d) => String(d._id))
+        .filter((id) => !approvedSet.has(id));
+      if (missing.length) {
+        return fail(
+          res,
+          "Fleet documents are not fully approved. Upload and get approval for all required fleet documents.",
+          422
+        );
+      }
+    }
+
+    const neededDriverDocs = await DriverNeededDocument.find({
+      active: true,
+      is_required: true,
+      $or: [{ document_for: "fleet" }, { document_for: "both" }, { account_type: "fleet" }, { account_type: "both" }],
+    })
+      .select("_id")
+      .lean();
+    if (neededDriverDocs.length) {
+      const approvedDriverDocs = await DriverDocument.find({
+        driver_id,
+        driver_needed_document_id: { $in: neededDriverDocs.map((d) => d._id) },
+        status: "approved",
+      })
+        .select("driver_needed_document_id")
+        .lean();
+      const approvedSet = new Set(approvedDriverDocs.map((d) => String(d.driver_needed_document_id)));
+      const missing = neededDriverDocs
+        .map((d) => String(d._id))
+        .filter((id) => !approvedSet.has(id));
+      if (missing.length) {
+        return fail(
+          res,
+          "Fleet driver documents are not fully approved. Upload and get approval for all required fleet driver documents.",
+          422
+        );
+      }
+    }
+
     await Driver.updateOne(
       { _id: driver_id },
       { $set: { fleet_id: fleet, owner_id: oid } }
@@ -87,6 +153,115 @@ async function assignDriver(req, res) {
     );
 
     return ok(res, null, "Driver assigned successfully");
+  } catch {
+    return fail(res);
+  }
+}
+
+async function listFleetDocuments(req, res) {
+  try {
+    const owner = await getOwnerByUserId(req.user?.id);
+    if (!owner) return fail(res, "Owner not found", 404);
+    const { fleet } = req.params;
+    const fleetRow = await Fleet.findOne({ _id: fleet, owner_id: owner._id }).lean();
+    if (!fleetRow) return fail(res, "Fleet not found", 404);
+    const docs = await FleetDocument.find({ fleet_id: fleet })
+      .sort({ createdAt: -1 })
+      .populate("fleet_needed_document_id", "name is_required")
+      .lean();
+    return ok(res, docs);
+  } catch {
+    return fail(res);
+  }
+}
+
+async function uploadFleetDocument(req, res) {
+  try {
+    const owner = await getOwnerByUserId(req.user?.id);
+    if (!owner) return fail(res, "Owner not found", 404);
+    const { fleet } = req.params;
+    const { fleet_needed_document_id, document_name, document_path } = req.body || {};
+    if (!fleet_needed_document_id || !mongoose.Types.ObjectId.isValid(fleet_needed_document_id)) {
+      return fail(res, "valid fleet_needed_document_id is required", 422);
+    }
+    if (!document_path) return fail(res, "document_path is required", 422);
+    const fleetRow = await Fleet.findOne({ _id: fleet, owner_id: owner._id }).lean();
+    if (!fleetRow) return fail(res, "Fleet not found", 404);
+    const needed = await FleetNeededDocument.findById(fleet_needed_document_id).lean();
+    if (!needed || !needed.active) return fail(res, "Fleet needed document not found", 404);
+
+    const doc = await FleetDocument.findOneAndUpdate(
+      { fleet_id: fleet, fleet_needed_document_id },
+      {
+        $set: {
+          document_name: document_name || needed.name,
+          document_path,
+          status: "pending",
+          approve: false,
+          rejected_reason: null,
+          reviewed_at: null,
+        },
+      },
+      { upsert: true, new: true }
+    ).lean();
+    return ok(res, { fleet_document: doc }, "Fleet document uploaded");
+  } catch {
+    return fail(res);
+  }
+}
+
+async function listDriverDocuments(req, res) {
+  try {
+    const owner = await getOwnerByUserId(req.user?.id);
+    if (!owner) return fail(res, "Owner not found", 404);
+    const { driver } = req.params;
+    const driverRow = await Driver.findOne({ _id: driver, owner_id: owner._id }).lean();
+    if (!driverRow) return fail(res, "Fleet driver not found", 404);
+    const docs = await DriverDocument.find({ driver_id: driver })
+      .sort({ createdAt: -1 })
+      .populate("driver_needed_document_id", "name is_required document_for account_type")
+      .lean();
+    return ok(res, docs);
+  } catch {
+    return fail(res);
+  }
+}
+
+async function uploadDriverDocument(req, res) {
+  try {
+    const owner = await getOwnerByUserId(req.user?.id);
+    if (!owner) return fail(res, "Owner not found", 404);
+    const { driver } = req.params;
+    const { driver_needed_document_id, document_name, document_path } = req.body || {};
+    if (!driver_needed_document_id || !mongoose.Types.ObjectId.isValid(driver_needed_document_id)) {
+      return fail(res, "valid driver_needed_document_id is required", 422);
+    }
+    if (!document_path) return fail(res, "document_path is required", 422);
+    const driverRow = await Driver.findOne({ _id: driver, owner_id: owner._id }).lean();
+    if (!driverRow) return fail(res, "Fleet driver not found", 404);
+
+    const needed = await DriverNeededDocument.findById(driver_needed_document_id).lean();
+    if (!needed || !needed.active) return fail(res, "Driver needed document not found", 404);
+    const docFor = parseDocumentFor(needed.document_for || needed.account_type);
+    if (docFor === "normal") {
+      return fail(res, "This document is only for normal drivers", 422);
+    }
+
+    const doc = await DriverDocument.findOneAndUpdate(
+      { driver_id: driver, driver_needed_document_id },
+      {
+        $set: {
+          document_name: document_name || needed.name,
+          document_path,
+          status: "pending",
+          approve: false,
+          rejected_reason: null,
+          reviewed_at: null,
+        },
+      },
+      { upsert: true, new: true }
+    ).lean();
+    return ok(res, { driver_document: doc }, "Driver document uploaded");
   } catch {
     return fail(res);
   }
@@ -297,6 +472,10 @@ module.exports = {
   deleteFleet,
   addDrivers,
   deleteDriver,
+  listFleetDocuments,
+  uploadFleetDocument,
+  listDriverDocuments,
+  uploadDriverDocument,
   ownerDashboard,
   fleetDashboard,
   fleetDriverDashboard,

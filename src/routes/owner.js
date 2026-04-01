@@ -27,6 +27,21 @@ ownerRoutes.get(
   ownerController.neededDocuments
 );
 
+ownerRoutes.get(
+  "/fleet/:fleet/documents",
+  authenticate,
+  validateParams(schemas.params.fleet),
+  ownerController.listFleetDocuments
+);
+
+ownerRoutes.post(
+  "/fleet/:fleet/documents",
+  authenticate,
+  validateParams(schemas.params.fleet),
+  body,
+  ownerController.uploadFleetDocument
+);
+
 ownerRoutes.get("/list-drivers", authenticate, ownerController.listDrivers);
 
 ownerRoutes.post(
@@ -57,6 +72,21 @@ ownerRoutes.post(
 
 // Fleet Drivers
 ownerRoutes.post("/add-drivers", authenticate, body, ownerController.addDrivers);
+
+ownerRoutes.get(
+  "/drivers/:driver/documents",
+  authenticate,
+  validateParams(schemas.params.driver),
+  ownerController.listDriverDocuments
+);
+
+ownerRoutes.post(
+  "/drivers/:driver/documents",
+  authenticate,
+  validateParams(schemas.params.driver),
+  body,
+  ownerController.uploadDriverDocument
+);
 
 ownerRoutes.get(
   "/delete-driver/:driver",

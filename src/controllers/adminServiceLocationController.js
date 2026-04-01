@@ -71,12 +71,26 @@ async function getServiceLocation(req, res, next) {
 async function createServiceLocation(req, res, next) {
   try {
     const body = req.body || {};
-    if (!body.name) {
-      return err(res, 422, "name is required");
+    const name = body.service_location_name ?? body.name;
+    const countryId = body.country ?? body.country_id;
+    const currencyCode = body.currency ?? body.currency_code;
+    const timezone = body.time_zone ?? body.timezone;
+
+    if (!name) {
+      return err(res, 422, "service_location_name is required");
+    }
+    if (!countryId || !mongoose.Types.ObjectId.isValid(countryId)) {
+      return err(res, 422, "valid country is required");
+    }
+    if (!currencyCode) {
+      return err(res, 422, "currency is required");
+    }
+    if (!timezone) {
+      return err(res, 422, "time_zone is required");
     }
     const slug =
       body.slug ||
-      String(body.name)
+      String(name)
         .toLowerCase()
         .trim()
         .replace(/\s+/g, "-")
@@ -88,14 +102,11 @@ async function createServiceLocation(req, res, next) {
     }
 
     const doc = await ServiceLocation.create({
-      name: String(body.name).trim(),
+      name: String(name).trim(),
       slug,
-      country_id:
-        body.country_id && mongoose.Types.ObjectId.isValid(body.country_id)
-          ? body.country_id
-          : undefined,
-      timezone: body.timezone,
-      currency_code: body.currency_code,
+      country_id: countryId,
+      timezone,
+      currency_code: String(currencyCode).trim(),
       active: body.active !== false,
     });
 
@@ -117,7 +128,12 @@ async function updateServiceLocation(req, res, next) {
     if (!doc) return err(res, 404, "Service location not found");
 
     const body = req.body || {};
-    if (body.name !== undefined) doc.name = String(body.name).trim();
+    const name = body.service_location_name ?? body.name;
+    const countryId = body.country ?? body.country_id;
+    const currencyCode = body.currency ?? body.currency_code;
+    const timezone = body.time_zone ?? body.timezone;
+
+    if (name !== undefined) doc.name = String(name).trim();
     if (body.slug !== undefined) {
       const s = String(body.slug).trim().toLowerCase();
       const clash = await ServiceLocation.findOne({ slug: s, _id: { $ne: doc._id } }).lean();
@@ -126,14 +142,14 @@ async function updateServiceLocation(req, res, next) {
       }
       doc.slug = s;
     }
-    if (body.country_id !== undefined) {
+    if (countryId !== undefined) {
       doc.country_id =
-        body.country_id && mongoose.Types.ObjectId.isValid(body.country_id)
-          ? body.country_id
+        countryId && mongoose.Types.ObjectId.isValid(countryId)
+          ? countryId
           : null;
     }
-    if (body.timezone !== undefined) doc.timezone = body.timezone;
-    if (body.currency_code !== undefined) doc.currency_code = body.currency_code;
+    if (timezone !== undefined) doc.timezone = timezone;
+    if (currencyCode !== undefined) doc.currency_code = String(currencyCode).trim();
     if (body.active !== undefined) doc.active = Boolean(body.active);
 
     await doc.save();
