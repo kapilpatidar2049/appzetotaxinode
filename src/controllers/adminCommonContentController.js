@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Sos = require("../models/Sos");
 const Faq = require("../models/Faq");
 const CancellationReason = require("../models/CancellationReason");
+const MobileAppSetting = require("../models/MobileAppSetting");
 
 function ok(res, data, message = "success") {
   return res.json({ success: true, message, data });
@@ -300,6 +301,148 @@ async function deleteSos(req, res, next) {
   }
 }
 
+// App modules (taxi/delivery x normal/rental/outstation)
+async function listAppModules(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const { active, transport_type, service_type } = req.query;
+    const filter = {};
+    if (active === "1" || active === "true") filter.active = true;
+    if (active === "0" || active === "false") filter.active = false;
+    if (transport_type) filter.transport_type = String(transport_type).toLowerCase();
+    if (service_type) filter.service_type = String(service_type).toLowerCase();
+
+    const [items, total] = await Promise.all([
+      MobileAppSetting.find(filter)
+        .sort({ order_by: 1, createdAt: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      MobileAppSetting.countDocuments(filter),
+    ]);
+
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function createAppModule(req, res, next) {
+  try {
+    const body = req.body || {};
+    const transportType = String(body.transport_type || "").toLowerCase();
+    const serviceType = String(body.service_type || "").toLowerCase();
+    const allowedTransport = ["taxi", "delivery"];
+    const allowedService = ["normal", "rental", "outstation"];
+
+    if (!body.name) return err(res, 422, "name is required");
+    if (!allowedTransport.includes(transportType)) {
+      return err(res, 422, "transport_type must be taxi or delivery");
+    }
+    if (!allowedService.includes(serviceType)) {
+      return err(res, 422, "service_type must be normal, rental, or outstation");
+    }
+
+    const doc = await MobileAppSetting.create({
+      name: String(body.name).trim(),
+      transport_type: transportType,
+      short_description: body.short_description != null ? String(body.short_description).trim() : "",
+      description: body.description != null ? String(body.description).trim() : "",
+      service_type: serviceType,
+      mobile_menu_icon: body.mobile_menu_icon || null,
+      order_by: body.order_by != null ? String(body.order_by) : "0",
+      active: body.active !== false,
+    });
+
+    return res
+      .status(201)
+      .json({ success: true, message: "Created", app_module: doc.toObject() });
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Module already exists for this name + transport_type + service_type",
+      });
+    }
+    next(e);
+  }
+}
+
+async function getAppModule(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await MobileAppSetting.findById(id).lean();
+    if (!doc) return err(res, 404, "App module not found");
+    return ok(res, { app_module: doc });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function updateAppModule(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await MobileAppSetting.findById(id);
+    if (!doc) return err(res, 404, "App module not found");
+
+    const body = req.body || {};
+    const allowedTransport = ["taxi", "delivery"];
+    const allowedService = ["normal", "rental", "outstation"];
+
+    if (body.name !== undefined) doc.name = String(body.name).trim();
+    if (body.transport_type !== undefined) {
+      const transportType = String(body.transport_type).toLowerCase();
+      if (!allowedTransport.includes(transportType)) {
+        return err(res, 422, "transport_type must be taxi or delivery");
+      }
+      doc.transport_type = transportType;
+    }
+    if (body.service_type !== undefined) {
+      const serviceType = String(body.service_type).toLowerCase();
+      if (!allowedService.includes(serviceType)) {
+        return err(res, 422, "service_type must be normal, rental, or outstation");
+      }
+      doc.service_type = serviceType;
+    }
+    if (body.short_description !== undefined) doc.short_description = body.short_description;
+    if (body.description !== undefined) doc.description = body.description;
+    if (body.mobile_menu_icon !== undefined) doc.mobile_menu_icon = body.mobile_menu_icon;
+    if (body.order_by !== undefined) doc.order_by = body.order_by != null ? String(body.order_by) : "0";
+    if (body.active !== undefined) doc.active = Boolean(body.active);
+
+    await doc.save();
+    return ok(res, { app_module: doc.toObject() }, "Updated");
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Module already exists for this name + transport_type + service_type",
+      });
+    }
+    next(e);
+  }
+}
+
+async function deleteAppModule(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await MobileAppSetting.findByIdAndDelete(id);
+    if (!doc) return err(res, 404, "App module not found");
+    return ok(res, { id }, "Deleted");
+  } catch (e) {
+    next(e);
+  }
+}
+
 module.exports = {
   listFaqs,
   getFaq,
@@ -316,5 +459,10 @@ module.exports = {
   createSos,
   updateSos,
   deleteSos,
+  listAppModules,
+  createAppModule,
+  getAppModule,
+  updateAppModule,
+  deleteAppModule,
 };
 

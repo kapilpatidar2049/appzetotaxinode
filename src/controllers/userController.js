@@ -10,12 +10,54 @@ const ServiceLocation = require("../models/ServiceLocation");
 const FavouriteLocation = require("../models/FavouriteLocation");
 const UserBankInfo = require("../models/UserBankInfo");
 const Request = require("../models/Request");
+const RequestRating = require("../models/RequestRating");
+const Setting = require("../models/Setting");
+const Banner = require("../models/Banner");
+const Sos = require("../models/Sos");
+const UserWallet = require("../models/UserWallet");
+const Notification = require("../models/Notification");
+const Country = require("../models/Country");
 
 // Helper: load current user from DB by id
 async function loadUserById(id) {
   
     return User.findById(id).lean();
   
+}
+
+function settingValue(map, key, fallback = null) {
+  const v = map.get(key);
+  return v == null ? fallback : v;
+}
+
+function boolFromSetting(v, fallback = false) {
+  if (v == null) return fallback;
+  if (typeof v === "boolean") return v;
+  const s = String(v).toLowerCase();
+  return s === "1" || s === "true" || s === "yes";
+}
+
+function ordinal(n) {
+  const j = n % 10;
+  const k = n % 100;
+  if (j === 1 && k !== 11) return `${n}st`;
+  if (j === 2 && k !== 12) return `${n}nd`;
+  if (j === 3 && k !== 13) return `${n}rd`;
+  return `${n}th`;
+}
+
+function formatAppDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const day = ordinal(d.getDate());
+  const mon = months[d.getMonth()];
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${day} ${mon} ${String(h).padStart(2, "0")}:${m} ${ampm}`;
 }
 
 // GET /api/v1/user/  (me)
@@ -38,21 +80,189 @@ async function me(req, res) {
       user.refferal_code = newCode;
     }
 
-    // For now we return a simplified user object; later we can expand with
-    // driver/owner specific includes if needed.
+    const [
+      country,
+      wallet,
+      notificationsCount,
+      completedRideCount,
+      ongoingRide,
+      favourites,
+      sosData,
+      banners,
+      userRatings,
+      settings,
+    ] = await Promise.all([
+      user.country ? Country.findById(user.country).lean() : null,
+      UserWallet.findOne({ user_id: userId }).lean(),
+      Notification.countDocuments({ user_id: userId, is_read: false }),
+      Request.countDocuments({ user_id: userId, is_completed: true }),
+      Request.findOne({ user_id: userId, is_completed: false, is_cancelled: false })
+        .sort({ createdAt: -1 })
+        .lean(),
+      FavouriteLocation.find({ user_id: userId }).sort({ createdAt: -1 }).lean(),
+      Sos.find({ user_id: userId, active: true }).sort({ createdAt: -1 }).lean(),
+      Banner.find({ active: true }).sort({ createdAt: -1 }).lean(),
+      RequestRating.aggregate([
+        { $match: { user_id: new mongoose.Types.ObjectId(userId) } },
+        { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+      ]),
+      Setting.find({}).lean(),
+    ]);
+
+    const settingMap = new Map(settings.map((s) => [s.key, s.value]));
+    const currencyCode = country?.currency_code || settingValue(settingMap, "currency_code", "INR");
+    const currencySymbol = country?.currency_symbol || settingValue(settingMap, "currency_symbol", "₹");
+    const referralAmount = settingValue(settingMap, "referral_amount", 30);
+    const userRating = userRatings[0]?.avg ? Number(userRatings[0].avg.toFixed(2)) : 0;
+    const noOfRatings = userRatings[0]?.count || 0;
+
+    const walletData = wallet
+      ? {
+          id: wallet._id,
+          user_id: wallet.user_id,
+          amount_added: Number(wallet.amount_added || 0),
+          amount_balance: Number(wallet.amount_balance || 0),
+          amount_balance_locked: 0,
+          amount_spent: 0,
+          referral_bonus_locked: 0,
+          unlocked_referral_amount: 0,
+          withdrawable_referral_balance: 0,
+          currency_symbol: currencySymbol,
+          currency_code: currencyCode,
+          created_at: formatAppDate(wallet.createdAt),
+          updated_at: formatAppDate(wallet.updatedAt),
+        }
+      : null;
+
+    const bannerData = banners.map((b) => ({
+      image: b.image,
+      image_url: b.external_link || null,
+      active: b.active ? 1 : 0,
+    }));
+
     return res.json({
       success: true,
-      message: "success",
       data: {
         id: user._id || user.id,
         name: user.name,
+        gender: user.gender || null,
+        last_name: user.last_name || null,
+        username: null,
         email: user.email,
         mobile: user.mobile,
+        profile_picture:
+          user.profile_picture || "https://zepido.com/assets/images/Male_default_image.png",
+        active: user.active ? 1 : 0,
+        email_confirmed: user.email_confirmed ? 1 : 0,
+        mobile_confirmed: user.mobile_confirmed ? 1 : 0,
+        last_known_ip: null,
+        last_login_at: null,
+        rating: userRating,
+        no_of_ratings: noOfRatings,
         refferal_code: user.refferal_code,
-        lang: user.lang,
-        country: user.country,
-        current_lat: user.current_lat,
-        current_lng: user.current_lng,
+        currency_code: currencyCode,
+        currency_symbol: currencySymbol,
+        currency_pointer: settingValue(settingMap, "currency_pointer", "ltr"),
+        country_code: country?.code || null,
+        show_rental_ride: boolFromSetting(settingValue(settingMap, "show_rental_ride", "1"), true),
+        is_delivery_app: boolFromSetting(settingValue(settingMap, "is_delivery_app", "0"), false),
+        fcm_token: user.fcm_token || null,
+        show_ride_later_feature: boolFromSetting(
+          settingValue(settingMap, "show_ride_later_feature", "1"),
+          true
+        ),
+        zone_id: settingValue(settingMap, "zone_id", null),
+        authorization_code: null,
+        enable_support_ticket_feature: String(
+          settingValue(settingMap, "enable_support_ticket_feature", "0")
+        ),
+        android_app: settingValue(settingMap, "android_user_app_link", null),
+        ios_app: settingValue(settingMap, "ios_user_app_link", null),
+        enable_modules_for_applications: String(
+          settingValue(settingMap, "enable_modules_for_applications", "both")
+        ),
+        contact_us_mobile1: settingValue(settingMap, "contact_us_mobile1", null),
+        contact_us_mobile2: settingValue(settingMap, "contact_us_mobile2", null),
+        contact_us_link: settingValue(settingMap, "contact_us_link", null),
+        show_wallet_money_transfer_feature_on_mobile_app: String(
+          settingValue(settingMap, "show_wallet_money_transfer_feature_on_mobile_app", "1")
+        ),
+        show_bank_info_feature_on_mobile_app: String(
+          settingValue(settingMap, "show_bank_info_feature_on_mobile_app", "1")
+        ),
+        show_wallet_feature_on_mobile_app: String(
+          settingValue(settingMap, "show_wallet_feature_on_mobile_app", "1")
+        ),
+        show_only_total_amount: String(settingValue(settingMap, "show_only_total_amount", "1")),
+        contact_booking_number: settingValue(settingMap, "contact_booking_number", null),
+        distance_unit: settingValue(settingMap, "distance_unit", "km"),
+        show_outstation_ride_feature: String(
+          settingValue(settingMap, "show_outstation_ride_feature", "1")
+        ),
+        show_taxi_outstation_ride_feature: String(
+          settingValue(settingMap, "show_taxi_outstation_ride_feature", "0")
+        ),
+        show_delivery_outstation_ride_feature: String(
+          settingValue(settingMap, "show_delivery_outstation_ride_feature", "0")
+        ),
+        enable_outstation_round_trip_feature: String(
+          settingValue(settingMap, "enable_outstation_round_trip_feature", "0")
+        ),
+        notifications_count: notificationsCount,
+        show_taxi_rental_ride: boolFromSetting(
+          settingValue(settingMap, "show_taxi_rental_ride", "1"),
+          true
+        ),
+        show_delivery_rental_ride: boolFromSetting(
+          settingValue(settingMap, "show_delivery_rental_ride", "1"),
+          true
+        ),
+        show_card_payment_feature: boolFromSetting(
+          settingValue(settingMap, "show_card_payment_feature", "1"),
+          true
+        ),
+        referral_comission_string: `Refer a friend and earn${currencySymbol}${referralAmount}`,
+        user_can_make_a_ride_after_x_miniutes: String(
+          settingValue(settingMap, "user_can_make_a_ride_after_x_miniutes", "30")
+        ),
+        maximum_time_for_find_drivers_for_regular_ride: Number(
+          settingValue(settingMap, "maximum_time_for_find_drivers_for_regular_ride", 300)
+        ),
+        maximum_time_for_find_drivers_for_bitting_ride: String(
+          settingValue(settingMap, "maximum_time_for_find_drivers_for_bitting_ride", "30")
+        ),
+        enable_pet_preference_for_user: String(
+          settingValue(settingMap, "enable_pet_preference_for_user", "0")
+        ),
+        enable_luggage_preference_for_user: String(
+          settingValue(settingMap, "enable_luggage_preference_for_user", "1")
+        ),
+        bidding_amount_increase_or_decrease: String(
+          settingValue(settingMap, "bidding_amount_increase_or_decrease", "10")
+        ),
+        show_ride_without_destination: String(
+          settingValue(settingMap, "show_ride_without_destination", "1")
+        ),
+        enable_country_restrict_on_map: String(
+          settingValue(settingMap, "enable_country_restrict_on_map", "0")
+        ),
+        enable_map_appearance_change_on_mobile_app: String(
+          settingValue(settingMap, "enable_map_appearance_change_on_mobile_app", "0")
+        ),
+        enable_multiple_ride_feature: String(
+          settingValue(settingMap, "enable_multiple_ride_feature", "1")
+        ),
+        conversation_id: "",
+        map_type: user.map_type || "google_map",
+        has_ongoing_ride: Boolean(ongoingRide),
+        completed_ride_count: completedRideCount,
+        sos: { data: sosData || [] },
+        bannerImage: { data: bannerData },
+        wallet: { data: walletData },
+        onTripRequest: ongoingRide || null,
+        metaRequest: null,
+        favouriteLocations: { data: favourites || [] },
+        laterMetaRequest: null,
       },
     });
   } catch (err) {

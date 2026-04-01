@@ -24,5 +24,12 @@ router.get("/sos/:id", adminCommonContentController.getSos);
 router.patch("/sos/:id", adminCommonContentController.updateSos);
 router.delete("/sos/:id", adminCommonContentController.deleteSos);
 
+// App modules
+router.get("/app-modules", adminCommonContentController.listAppModules);
+router.post("/app-modules", adminCommonContentController.createAppModule);
+router.get("/app-modules/:id", adminCommonContentController.getAppModule);
+router.patch("/app-modules/:id", adminCommonContentController.updateAppModule);
+router.delete("/app-modules/:id", adminCommonContentController.deleteAppModule);
+
 module.exports = router;
 

@@ -61,10 +61,13 @@ async function getGoodsType(req, res, next) {
 async function createGoodsType(req, res, next) {
   try {
     const body = req.body || {};
-    if (!body.name) return err(res, 422, "name is required");
+    const name = body.name || body.languageFields?.en;
+    if (!name) return err(res, 422, "name is required (or languageFields.en)");
 
     const doc = await GoodsType.create({
-      name: String(body.name).trim(),
+      name: String(name).trim(),
+      languageFields: body.languageFields ?? undefined,
+      goods_types_for: body.goods_types_for != null ? String(body.goods_types_for).toLowerCase() : "both",
       description: body.description,
       image: body.image,
       active: body.active !== false,
@@ -88,6 +91,13 @@ async function updateGoodsType(req, res, next) {
 
     const body = req.body || {};
     if (body.name !== undefined) doc.name = String(body.name).trim();
+    if (body.languageFields?.en && body.name === undefined) {
+      doc.name = String(body.languageFields.en).trim();
+    }
+    if (body.languageFields !== undefined) doc.languageFields = body.languageFields;
+    if (body.goods_types_for !== undefined) {
+      doc.goods_types_for = body.goods_types_for == null ? "both" : String(body.goods_types_for).toLowerCase();
+    }
     if (body.description !== undefined) doc.description = body.description;
     if (body.image !== undefined) doc.image = body.image;
     if (body.active !== undefined) doc.active = Boolean(body.active);

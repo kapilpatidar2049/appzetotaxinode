@@ -92,6 +92,38 @@
     {
       "key": "mobilePage",
       "value": "privacy"
+    },
+    {
+      "key": "zoneId",
+      "value": ""
+    },
+    {
+      "key": "ownerMgmtFleetId",
+      "value": ""
+    },
+    {
+      "key": "ownerMgmtDriverId",
+      "value": ""
+    },
+    {
+      "key": "ownerMgmtOwnerId",
+      "value": ""
+    },
+    {
+      "key": "ownerMgmtDocId",
+      "value": ""
+    },
+    {
+      "key": "driverRatingId",
+      "value": ""
+    },
+    {
+      "key": "fleetDocumentUploadId",
+      "value": ""
+    },
+    {
+      "key": "driverDocumentUploadId",
+      "value": ""
     }
   ],
   "item": [
@@ -6981,7 +7013,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{}"
+                  "raw": "{\"service_location_name\":\"Updated Location\",\"country\":\"{{countryId}}\",\"currency\":\"INR\",\"time_zone\":\"Asia/Kolkata\"}"
                 }
               }
             },
@@ -6990,6 +7022,521 @@
               "request": {
                 "method": "DELETE",
                 "url": "{{baseUrl}}/api/v1/admin/service-locations/{{serviceLocationId}}",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "List zones",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/zones",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create zone",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/admin/zones",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"languageFields\":{\"en\":\"India\"},\"coordinates\":\"[[[74.32202366298,20.929108563259],[78.89233616298,30.418825016773],[86.97827366298,20.975356214524],[77.13452366298,13.254452466582],[74.32202366298,20.929108563259]]]\",\"distance_price_percentage\":0,\"maximum_distance\":0,\"maximum_outstation_distance\":0,\"peak_zone_duration\":0,\"peak_zone_history_duration\":0,\"peak_zone_radius\":0,\"peak_zone_ride_count\":0,\"service_location_id\":\"{{serviceLocationId}}\",\"unit\":\"1\"}"
+                }
+              }
+            },
+            {
+              "name": "Get zone",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/zones/{{zoneId}}",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Patch zone",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/admin/zones/{{zoneId}}",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"active\":true}"
+                }
+              }
+            },
+            {
+              "name": "Delete zone",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/admin/zones/{{zoneId}}",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wallet admin actions",
+          "item": [
+            {
+              "name": "User wallet adjust",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/admin/wallet/users/{{adminUserId}}/adjust",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"amount\":100,\"payment_type\":\"credit\",\"remarks\":\"admin credit\"}"
+                }
+              }
+            },
+            {
+              "name": "Driver wallet adjust",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/admin/wallet/drivers/{{adminDriverId}}/adjust",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"amount\":50,\"payment_type\":\"debit\",\"remarks\":\"admin debit\"}"
+                }
+              }
+            },
+            {
+              "name": "Negative driver wallets",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/wallet/drivers/negative",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Owner Management",
+          "item": [
+            {
+              "name": "Owner management dashboard",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/dashboard",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Manage owners list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/manage-owners",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Manage owner get",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/manage-owners/{{ownerMgmtOwnerId}}",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Owner wallet list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/owner-wallet",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Owner wallet adjust",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/owner-wallet/{{ownerMgmtOwnerId}}/adjust",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"amount\":100,\"remarks\":\"manual\"}"
+                }
+              }
+            },
+            {
+              "name": "Fleet management list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/fleet-management",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Blocked fleet drivers",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/blocked-fleet-drivers",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Fleet needed docs list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/fleet-needed-document",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Owner needed docs list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/owner-needed-document",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Driver needed docs list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/driver-needed-document",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create driver needed doc",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/driver-needed-document",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"name\":\"Driving License\",\"document_for\":\"fleet\",\"is_required\":true,\"active\":true}"
+                }
+              }
+            },
+            {
+              "name": "Fleet uploads list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/fleet-documents",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Review fleet upload",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/fleet-documents/{{fleetDocumentUploadId}}/review",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"status\":\"approved\"}"
+                }
+              }
+            },
+            {
+              "name": "Driver uploads list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/driver-documents",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Review driver upload",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/driver-documents/{{driverDocumentUploadId}}/review",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"status\":\"rejected\",\"rejected_reason\":\"Blur image\"}"
+                }
+              }
+            },
+            {
+              "name": "Driver ratings list",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/driver-ratings",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Driver ratings details",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/admin/owner-management/driver-ratings/{{adminDriverId}}",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
