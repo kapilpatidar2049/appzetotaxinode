@@ -6,6 +6,9 @@ const RoleUser = require("../models/RoleUser");
 const UserWallet = require("../models/UserWallet");
 const UserWalletHistory = require("../models/UserWalletHistory");
 const Request = require("../models/Request");
+const RequestRating = require("../models/RequestRating");
+const RequestBill = require("../models\RequestBill");
+const RequestMeta = require("../models\RequestMeta");
 
 function ok(res, data, message = "success") {
   return res.json({ success: true, message, data });
@@ -355,6 +358,189 @@ async function getRequests(req, res, next) {
   }
 }
 
+async function listDeleteRequests(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const search = (req.query.search || "").trim();
+    const filter = {
+      role: "user",
+      is_deleted_at: { $ne: null },
+    };
+
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      filter.$or = [{ name: rx }, { mobile: rx }, { email: rx }];
+    }
+
+    const [items, total] = await Promise.all([
+      User.find(filter)
+        .sort({ is_deleted_at: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("country", "name code dial_code flag")
+        .lean(),
+      User.countDocuments(filter),
+    ]);
+
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getDeletedUserProfile(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return err(res, 400, "Invalid user id");
+    }
+    const user = await User.findOne({
+      _id: id,
+      role: "user",
+      is_deleted_at: { $ne: null },
+    })
+      .populate("country", "name code dial_code flag")
+      .lean();
+    if (!user) {
+      return err(res, 404, "Deleted user not found");
+    }
+    let referred_by_name = null;
+    if (user.referred_by) {
+      const ref = await User.findById(user.referred_by).select("name").lean();
+      referred_by_name = ref?.name || null;
+    }
+    return ok(res, { user: { ...user, referred_by_name } });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function restoreDeletedUser(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return err(res, 400, "Invalid user id");
+    }
+    const user = await User.findOne({
+      _id: id,
+      role: "user",
+      is_deleted_at: { $ne: null },
+    });
+    if (!user) {
+      return err(res, 404, "Deleted user not found");
+    }
+    user.is_deleted_at = null;
+    user.active = true;
+    await user.save();
+    return ok(res, { id: user._id }, "User restored");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function deletePermanentlyFromDeleted(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return err(res, 400, "Invalid user id");
+    }
+    const user = await User.findOne({
+      _id: id,
+      role: "user",
+      is_deleted_at: { $ne: null },
+    });
+    if (!user) {
+      return err(res, 404, "Deleted user not found");
+    }
+    await User.deleteOne({ _id: id });
+    await UserWallet.deleteOne({ user_id: id });
+    await UserWalletHistory.deleteMany({ user_id: id });
+    return ok(res, { id }, "Deleted user removed permanently");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getReviewHistory(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return err(res, 400, "Invalid user id");
+    }
+    const { page, limit, skip } = parsePage(req);
+    const filter = { user_id: id };
+    const [items, total] = await Promise.all([
+      RequestRating.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("driver_id", "name mobile email owner_id")
+        .populate("request_id", "request_number is_completed is_cancelled")
+        .lean(),
+      RequestRating.countDocuments(filter),
+    ]);
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getRequestDetail(req, res, next) {
+  try {
+    const { id, request_id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return err(res, 400, "Invalid user id");
+    }
+    if (!mongoose.Types.ObjectId.isValid(request_id)) {
+      return err(res, 400, "Invalid request id");
+    }
+
+    const requestDoc = await Request.findOne({ _id: request_id, user_id: id })
+      .populate("user_id", "name email mobile")
+      .populate({
+        path: "driver_id",
+        select: "name mobile email user_id car_number",
+        populate: { path: "user_id", select: "name mobile email fcm_token" },
+      })
+      .populate("owner_id")
+      .lean();
+    if (!requestDoc) {
+      return err(res, 404, "Request not found for this user");
+    }
+
+    const [bill, meta, review] = await Promise.all([
+      RequestBill.findOne({ request_id }).lean(),
+      RequestMeta.find({ request_id }).sort({ createdAt: -1 }).lean(),
+      RequestRating.findOne({ request_id, user_id: id }).lean(),
+    ]);
+
+    return ok(res, {
+      request: requestDoc,
+      bill: bill || null,
+      request_meta: meta || [],
+      review: review || null,
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
 module.exports = {
   listUsers,
   getUser,
@@ -364,4 +550,10 @@ module.exports = {
   getWallet,
   getWalletHistory,
   getRequests,
+  listDeleteRequests,
+  getDeletedUserProfile,
+  restoreDeletedUser,
+  deletePermanentlyFromDeleted,
+  getReviewHistory,
+  getRequestDetail,
 };

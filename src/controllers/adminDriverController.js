@@ -437,6 +437,121 @@ async function getDriverRequests(req, res, next) {
   }
 }
 
+async function listDeletedDrivers(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const search = (req.query.search || "").trim();
+    const userFilter = {
+      role: "driver",
+      is_deleted_at: { $ne: null },
+    };
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      userFilter.$or = [{ name: rx }, { mobile: rx }, { email: rx }];
+    }
+
+    const [deletedUsers, totalUsers] = await Promise.all([
+      User.find(userFilter).sort({ is_deleted_at: -1, createdAt: -1 }).skip(skip).limit(limit).lean(),
+      User.countDocuments(userFilter),
+    ]);
+    const userIds = deletedUsers.map((u) => u._id);
+    const drivers = await Driver.find({ user_id: { $in: userIds } })
+      .populate("service_location_id", "name")
+      .lean();
+    const dMap = new Map(drivers.map((d) => [String(d.user_id), d]));
+
+    const results = deletedUsers.map((u) => {
+      const driver = dMap.get(String(u._id)) || null;
+      return {
+        driver_id: driver?._id || null,
+        deleted_at: u.is_deleted_at || null,
+        user: u,
+        driver,
+      };
+    });
+
+    return ok(res, {
+      results,
+      paginator: {
+        total: totalUsers,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(totalUsers / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getDeletedDriverProfile(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid driver id");
+    const driver = await Driver.findById(id)
+      .populate("service_location_id", "name")
+      .lean();
+    if (!driver) return err(res, 404, "Driver not found");
+    const user = await User.findOne({
+      _id: driver.user_id,
+      role: "driver",
+      is_deleted_at: { $ne: null },
+    }).lean();
+    if (!user) return err(res, 404, "Deleted driver profile not found");
+    return ok(res, { user, driver });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function restoreDeletedDriver(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid driver id");
+    const driver = await Driver.findById(id);
+    if (!driver) return err(res, 404, "Driver not found");
+    const user = await User.findOne({
+      _id: driver.user_id,
+      role: "driver",
+      is_deleted_at: { $ne: null },
+    });
+    if (!user) return err(res, 404, "Deleted driver profile not found");
+
+    user.is_deleted_at = null;
+    user.active = true;
+    driver.active = true;
+    await user.save();
+    await driver.save();
+
+    return ok(res, { id: driver._id }, "Driver restored");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function deleteDeletedDriverPermanently(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid driver id");
+    const driver = await Driver.findById(id).lean();
+    if (!driver) return err(res, 404, "Driver not found");
+    const user = await User.findOne({
+      _id: driver.user_id,
+      role: "driver",
+      is_deleted_at: { $ne: null },
+    }).lean();
+    if (!user) return err(res, 404, "Deleted driver profile not found");
+
+    await Driver.deleteOne({ _id: id });
+    await DriverWallet.deleteOne({ driver_id: id });
+    await User.deleteOne({ _id: driver.user_id });
+
+    return ok(res, { id }, "Deleted driver removed permanently");
+  } catch (e) {
+    next(e);
+  }
+}
+
 module.exports = {
   listDrivers,
   getDriver,
@@ -444,4 +559,8 @@ module.exports = {
   updateDriver,
   deleteDriver,
   getDriverRequests,
+  listDeletedDrivers,
+  getDeletedDriverProfile,
+  restoreDeletedDriver,
+  deleteDeletedDriverPermanently,
 };
