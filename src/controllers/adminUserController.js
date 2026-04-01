@@ -7,8 +7,8 @@ const UserWallet = require("../models/UserWallet");
 const UserWalletHistory = require("../models/UserWalletHistory");
 const Request = require("../models/Request");
 const RequestRating = require("../models/RequestRating");
-const RequestBill = require("../models\RequestBill");
-const RequestMeta = require("../models\RequestMeta");
+const RequestBill = require("../models/RequestBill");
+const RequestMeta = require("../models/RequestMeta");
 
 function ok(res, data, message = "success") {
   return res.json({ success: true, message, data });
