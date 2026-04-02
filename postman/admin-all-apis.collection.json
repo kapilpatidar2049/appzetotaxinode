@@ -1,0 +1,446 @@
+{
+  "info": {
+    "_postman_id": "3f9b4b2d-9f7e-4629-b30f-9ca8a4a6a0f4",
+    "name": "Admin APIs A-Z (Taxi Backend)",
+    "description": "Complete admin API collection for /api/v1/admin routes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1/admin" },
+    { "key": "accessToken", "value": "" },
+    { "key": "id", "value": "REPLACE_ID" },
+    { "key": "user_id", "value": "REPLACE_USER_ID" },
+    { "key": "driver_id", "value": "REPLACE_DRIVER_ID" },
+    { "key": "owner_id", "value": "REPLACE_OWNER_ID" },
+    { "key": "request_id", "value": "REPLACE_REQUEST_ID" },
+    { "key": "requestmodel", "value": "REPLACE_REQUESTMODEL" }
+  ],
+  "item": [
+    {
+      "name": "Admins",
+      "item": [
+        { "name": "List Admins", "request": { "method": "GET", "url": "{{baseUrl}}/admins" } },
+        { "name": "Create Admin", "request": { "method": "POST", "url": "{{baseUrl}}/admins", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"secret123\"\n}" } } },
+        { "name": "Get Admin", "request": { "method": "GET", "url": "{{baseUrl}}/admins/{{id}}" } },
+        { "name": "Update Admin", "request": { "method": "PATCH", "url": "{{baseUrl}}/admins/{{id}}", "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Admin\"\n}" } } },
+        { "name": "Delete Admin", "request": { "method": "DELETE", "url": "{{baseUrl}}/admins/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "List Users", "request": { "method": "GET", "url": "{{baseUrl}}/users" } },
+        { "name": "Create User", "request": { "method": "POST", "url": "{{baseUrl}}/users", "body": { "mode": "raw", "raw": "{\n  \"name\": \"User\",\n  \"mobile\": \"9999999999\",\n  \"password\": \"secret123\"\n}" } } },
+        { "name": "Bulk Upload Users", "request": { "method": "POST", "url": "{{baseUrl}}/users/bulk-upload" } },
+        { "name": "Delete Requests", "request": { "method": "GET", "url": "{{baseUrl}}/users/delete-requests" } },
+        { "name": "Deleted Users", "request": { "method": "GET", "url": "{{baseUrl}}/users/deleted" } },
+        { "name": "Deleted User Profile", "request": { "method": "GET", "url": "{{baseUrl}}/users/deleted/{{id}}/profile" } },
+        { "name": "Restore Deleted User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/deleted/{{id}}/restore" } },
+        { "name": "Delete Permanently (Deleted User)", "request": { "method": "DELETE", "url": "{{baseUrl}}/users/deleted/{{id}}" } },
+        { "name": "User Wallet", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}/wallet" } },
+        { "name": "User Wallet History", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}/wallet-history" } },
+        { "name": "User Reviews", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}/reviews" } },
+        { "name": "User Review History", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}/review-history" } },
+        { "name": "User Requests", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}/requests" } },
+        { "name": "User Request Detail", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}/requests/{{request_id}}" } },
+        { "name": "Get User", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}" } },
+        { "name": "Update User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}", "body": { "mode": "raw", "raw": "{\n  \"active\": true\n}" } } },
+        { "name": "Delete User", "request": { "method": "DELETE", "url": "{{baseUrl}}/users/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Drivers",
+      "item": [
+        { "name": "List Drivers", "request": { "method": "GET", "url": "{{baseUrl}}/drivers" } },
+        { "name": "Pending Drivers", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/pending" } },
+        { "name": "Approved Drivers", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/approved" } },
+        { "name": "Create Driver", "request": { "method": "POST", "url": "{{baseUrl}}/drivers" } },
+        { "name": "Bulk Upload Drivers", "request": { "method": "POST", "url": "{{baseUrl}}/drivers/bulk-upload" } },
+        { "name": "Deleted Drivers", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/deleted" } },
+        { "name": "Deleted Driver Profile", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/deleted/{{id}}/profile" } },
+        { "name": "Restore Deleted Driver", "request": { "method": "PATCH", "url": "{{baseUrl}}/drivers/deleted/{{id}}/restore" } },
+        { "name": "Delete Permanently (Deleted Driver)", "request": { "method": "DELETE", "url": "{{baseUrl}}/drivers/deleted/{{id}}" } },
+        { "name": "Driver Requests", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/{{id}}/requests" } },
+        { "name": "Driver Review History", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/{{id}}/review-history" } },
+        { "name": "Driver Reviews", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/{{id}}/reviews" } },
+        { "name": "Get Driver", "request": { "method": "GET", "url": "{{baseUrl}}/drivers/{{id}}" } },
+        { "name": "Update Driver", "request": { "method": "PATCH", "url": "{{baseUrl}}/drivers/{{id}}", "body": { "mode": "raw", "raw": "{\n  \"active\": true\n}" } } },
+        { "name": "Delete Driver", "request": { "method": "DELETE", "url": "{{baseUrl}}/drivers/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Owners",
+      "item": [
+        { "name": "List Owners", "request": { "method": "GET", "url": "{{baseUrl}}/owners" } },
+        { "name": "Create Owner", "request": { "method": "POST", "url": "{{baseUrl}}/owners" } },
+        { "name": "Get Owner", "request": { "method": "GET", "url": "{{baseUrl}}/owners/{{id}}" } },
+        { "name": "Update Owner", "request": { "method": "PATCH", "url": "{{baseUrl}}/owners/{{id}}", "body": { "mode": "raw", "raw": "{\n  \"active\": true,\n  \"approve\": false\n}" } } },
+        { "name": "Delete Owner", "request": { "method": "DELETE", "url": "{{baseUrl}}/owners/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Requests",
+      "item": [
+        { "name": "List Requests", "request": { "method": "GET", "url": "{{baseUrl}}/requests" } },
+        { "name": "Assign Driver", "request": { "method": "POST", "url": "{{baseUrl}}/requests/{{id}}/assign-driver" } },
+        { "name": "Cancel Request", "request": { "method": "POST", "url": "{{baseUrl}}/requests/{{id}}/cancel" } },
+        { "name": "Get Request", "request": { "method": "GET", "url": "{{baseUrl}}/requests/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Promos",
+      "item": [
+        { "name": "List Promos", "request": { "method": "GET", "url": "{{baseUrl}}/promos" } },
+        { "name": "Create Promo", "request": { "method": "POST", "url": "{{baseUrl}}/promos" } },
+        { "name": "Get Promo", "request": { "method": "GET", "url": "{{baseUrl}}/promos/{{id}}" } },
+        { "name": "Update Promo", "request": { "method": "PATCH", "url": "{{baseUrl}}/promos/{{id}}" } },
+        { "name": "Delete Promo", "request": { "method": "DELETE", "url": "{{baseUrl}}/promos/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Service Locations",
+      "item": [
+        { "name": "List Service Locations", "request": { "method": "GET", "url": "{{baseUrl}}/service-locations" } },
+        { "name": "Create Service Location", "request": { "method": "POST", "url": "{{baseUrl}}/service-locations" } },
+        { "name": "Get Service Location", "request": { "method": "GET", "url": "{{baseUrl}}/service-locations/{{id}}" } },
+        { "name": "Update Service Location", "request": { "method": "PATCH", "url": "{{baseUrl}}/service-locations/{{id}}" } },
+        { "name": "Delete Service Location", "request": { "method": "DELETE", "url": "{{baseUrl}}/service-locations/{{id}}" } },
+        { "name": "List Service Locations (Alias)", "request": { "method": "GET", "url": "{{baseUrl}}/service_locations" } }
+      ]
+    },
+    {
+      "name": "Banners",
+      "item": [
+        { "name": "List Banners", "request": { "method": "GET", "url": "{{baseUrl}}/banners" } },
+        { "name": "Create Banner", "request": { "method": "POST", "url": "{{baseUrl}}/banners" } },
+        { "name": "Get Banner", "request": { "method": "GET", "url": "{{baseUrl}}/banners/{{id}}" } },
+        { "name": "Update Banner", "request": { "method": "PATCH", "url": "{{baseUrl}}/banners/{{id}}" } },
+        { "name": "Delete Banner", "request": { "method": "DELETE", "url": "{{baseUrl}}/banners/{{id}}" } },
+        { "name": "Push Banner Notification", "request": { "method": "POST", "url": "{{baseUrl}}/banners/{{id}}/push" } }
+      ]
+    },
+    {
+      "name": "Zones",
+      "item": [
+        { "name": "List Zones", "request": { "method": "GET", "url": "{{baseUrl}}/zones" } },
+        { "name": "Create Zone", "request": { "method": "POST", "url": "{{baseUrl}}/zones" } },
+        { "name": "Get Zone", "request": { "method": "GET", "url": "{{baseUrl}}/zones/{{id}}" } },
+        { "name": "Update Zone", "request": { "method": "PATCH", "url": "{{baseUrl}}/zones/{{id}}" } },
+        { "name": "Delete Zone", "request": { "method": "DELETE", "url": "{{baseUrl}}/zones/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Types (Vehicle/Sub/Rental/Set-Price)",
+      "item": [
+        { "name": "List Vehicle Types", "request": { "method": "GET", "url": "{{baseUrl}}/types/vehicle-types" } },
+        { "name": "Create Vehicle Type", "request": { "method": "POST", "url": "{{baseUrl}}/types/vehicle-types" } },
+        { "name": "Get Vehicle Type", "request": { "method": "GET", "url": "{{baseUrl}}/types/vehicle-types/{{id}}" } },
+        { "name": "Update Vehicle Type", "request": { "method": "PATCH", "url": "{{baseUrl}}/types/vehicle-types/{{id}}" } },
+        { "name": "Delete Vehicle Type", "request": { "method": "DELETE", "url": "{{baseUrl}}/types/vehicle-types/{{id}}" } },
+        { "name": "List Sub Vehicle Types", "request": { "method": "GET", "url": "{{baseUrl}}/types/sub-vehicle-types" } },
+        { "name": "Create Sub Vehicle Type", "request": { "method": "POST", "url": "{{baseUrl}}/types/sub-vehicle-types" } },
+        { "name": "Get Sub Vehicle Type", "request": { "method": "GET", "url": "{{baseUrl}}/types/sub-vehicle-types/{{id}}" } },
+        { "name": "Update Sub Vehicle Type", "request": { "method": "PATCH", "url": "{{baseUrl}}/types/sub-vehicle-types/{{id}}" } },
+        { "name": "Delete Sub Vehicle Type", "request": { "method": "DELETE", "url": "{{baseUrl}}/types/sub-vehicle-types/{{id}}" } },
+        { "name": "List Rental Packages", "request": { "method": "GET", "url": "{{baseUrl}}/types/rental-packages" } },
+        { "name": "Create Rental Package", "request": { "method": "POST", "url": "{{baseUrl}}/types/rental-packages" } },
+        { "name": "Get Rental Package", "request": { "method": "GET", "url": "{{baseUrl}}/types/rental-packages/{{id}}" } },
+        { "name": "Update Rental Package", "request": { "method": "PATCH", "url": "{{baseUrl}}/types/rental-packages/{{id}}" } },
+        { "name": "Delete Rental Package", "request": { "method": "DELETE", "url": "{{baseUrl}}/types/rental-packages/{{id}}" } },
+        { "name": "List Set Prices", "request": { "method": "GET", "url": "{{baseUrl}}/types/set-prices" } },
+        { "name": "Create Set Price", "request": { "method": "POST", "url": "{{baseUrl}}/types/set-prices" } },
+        { "name": "Get Set Price", "request": { "method": "GET", "url": "{{baseUrl}}/types/set-prices/{{id}}" } },
+        { "name": "Update Set Price", "request": { "method": "PATCH", "url": "{{baseUrl}}/types/set-prices/{{id}}" } },
+        { "name": "Delete Set Price", "request": { "method": "DELETE", "url": "{{baseUrl}}/types/set-prices/{{id}}" } },
+        { "name": "List Rental Package Prices", "request": { "method": "GET", "url": "{{baseUrl}}/types/rental-package-prices" } },
+        { "name": "Create Rental Package Price", "request": { "method": "POST", "url": "{{baseUrl}}/types/rental-package-prices" } },
+        { "name": "Get Rental Package Price", "request": { "method": "GET", "url": "{{baseUrl}}/types/rental-package-prices/{{id}}" } },
+        { "name": "Update Rental Package Price", "request": { "method": "PATCH", "url": "{{baseUrl}}/types/rental-package-prices/{{id}}" } },
+        { "name": "Delete Rental Package Price", "request": { "method": "DELETE", "url": "{{baseUrl}}/types/rental-package-prices/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Goods Types",
+      "item": [
+        { "name": "List Goods Types", "request": { "method": "GET", "url": "{{baseUrl}}/goods-types" } },
+        { "name": "Create Goods Type", "request": { "method": "POST", "url": "{{baseUrl}}/goods-types" } },
+        { "name": "Get Goods Type", "request": { "method": "GET", "url": "{{baseUrl}}/goods-types/{{id}}" } },
+        { "name": "Update Goods Type", "request": { "method": "PATCH", "url": "{{baseUrl}}/goods-types/{{id}}" } },
+        { "name": "Delete Goods Type", "request": { "method": "DELETE", "url": "{{baseUrl}}/goods-types/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        { "name": "List User Wallets", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/users" } },
+        { "name": "Get User Wallet", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/users/{{user_id}}" } },
+        { "name": "Adjust User Wallet", "request": { "method": "POST", "url": "{{baseUrl}}/wallet/users/{{user_id}}/adjust" } },
+        { "name": "Add User Wallet Amount", "request": { "method": "POST", "url": "{{baseUrl}}/wallet/users/{{user_id}}/add" } },
+        { "name": "Deduct User Wallet Amount", "request": { "method": "POST", "url": "{{baseUrl}}/wallet/users/{{user_id}}/deduct" } },
+        { "name": "List Driver Wallets", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/drivers" } },
+        { "name": "Negative Driver Wallets", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/drivers/negative" } },
+        { "name": "Drivers With Withdrawals", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/drivers/withdrawals" } },
+        { "name": "Driver Withdrawals", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/drivers/{{driver_id}}/withdrawals" } },
+        { "name": "Get Driver Wallet", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/drivers/{{driver_id}}" } },
+        { "name": "Adjust Driver Wallet", "request": { "method": "POST", "url": "{{baseUrl}}/wallet/drivers/{{driver_id}}/adjust" } },
+        { "name": "Add Driver Wallet Amount", "request": { "method": "POST", "url": "{{baseUrl}}/wallet/drivers/{{driver_id}}/add" } },
+        { "name": "Deduct Driver Wallet Amount", "request": { "method": "POST", "url": "{{baseUrl}}/wallet/drivers/{{driver_id}}/deduct" } },
+        { "name": "List Withdrawals", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/withdrawals" } },
+        { "name": "Get Withdrawal", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/withdrawals/{{id}}" } },
+        { "name": "Update Withdrawal Status", "request": { "method": "PATCH", "url": "{{baseUrl}}/wallet/withdrawals/{{id}}" } },
+        { "name": "Delete Withdrawal", "request": { "method": "DELETE", "url": "{{baseUrl}}/wallet/withdrawals/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Referral",
+      "item": [
+        { "name": "Referral Dashboard", "request": { "method": "GET", "url": "{{baseUrl}}/referral/dashboard" } },
+        { "name": "Get Referral Settings (All)", "request": { "method": "GET", "url": "{{baseUrl}}/referral/settings" } },
+        { "name": "Get User Referral Settings", "request": { "method": "GET", "url": "{{baseUrl}}/referral/settings/user" } },
+        { "name": "Update User Referral Settings", "request": { "method": "PATCH", "url": "{{baseUrl}}/referral/settings/user" } },
+        { "name": "Get Driver Referral Settings", "request": { "method": "GET", "url": "{{baseUrl}}/referral/settings/driver" } },
+        { "name": "Update Driver Referral Settings", "request": { "method": "PATCH", "url": "{{baseUrl}}/referral/settings/driver" } },
+        { "name": "Get Joining Bonus Settings", "request": { "method": "GET", "url": "{{baseUrl}}/referral/settings/joining-bonus" } },
+        { "name": "Update Joining Bonus Settings", "request": { "method": "PATCH", "url": "{{baseUrl}}/referral/settings/joining-bonus" } }
+      ]
+    },
+    {
+      "name": "Payment Methods",
+      "item": [
+        { "name": "List Payment Methods", "request": { "method": "GET", "url": "{{baseUrl}}/payment-methods" } },
+        { "name": "Create Payment Method", "request": { "method": "POST", "url": "{{baseUrl}}/payment-methods" } },
+        { "name": "Get Payment Method", "request": { "method": "GET", "url": "{{baseUrl}}/payment-methods/{{id}}" } },
+        { "name": "Update Payment Method", "request": { "method": "PATCH", "url": "{{baseUrl}}/payment-methods/{{id}}" } },
+        { "name": "Delete Payment Method", "request": { "method": "DELETE", "url": "{{baseUrl}}/payment-methods/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Owner Management",
+      "item": [
+        { "name": "Dashboard", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/dashboard" } },
+        { "name": "List Manage Owners", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/manage-owners" } },
+        { "name": "Create Manage Owner", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/manage-owners" } },
+        { "name": "Get Manage Owner", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/manage-owners/{{id}}" } },
+        { "name": "Update Manage Owner", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/manage-owners/{{id}}" } },
+        { "name": "Delete Manage Owner", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/manage-owners/{{id}}" } },
+        { "name": "Approve Manage Owner", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/manage-owners/{{id}}/approve" } },
+        { "name": "List Owner Wallet", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/owner-wallet" } },
+        { "name": "Create Owner Wallet", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/owner-wallet" } },
+        { "name": "Get Owner Wallet", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/owner-wallet/{{owner_id}}" } },
+        { "name": "Update Owner Wallet", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/owner-wallet/{{owner_id}}" } },
+        { "name": "Adjust Owner Wallet", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/owner-wallet/{{owner_id}}/adjust" } },
+        { "name": "Delete Owner Wallet", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/owner-wallet/{{owner_id}}" } },
+        { "name": "List Fleet Management", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/fleet-management" } },
+        { "name": "Create Fleet Management", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/fleet-management" } },
+        { "name": "Get Fleet Management", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/fleet-management/{{id}}" } },
+        { "name": "Update Fleet Management", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/fleet-management/{{id}}" } },
+        { "name": "Delete Fleet Management", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/fleet-management/{{id}}" } },
+        { "name": "Approve Fleet", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/fleet-management/{{id}}/approve" } },
+        { "name": "List Manage Fleet", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/manage-fleet" } },
+        { "name": "Create Manage Fleet", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/manage-fleet" } },
+        { "name": "Get Manage Fleet", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/manage-fleet/{{id}}" } },
+        { "name": "Update Manage Fleet", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/manage-fleet/{{id}}" } },
+        { "name": "Delete Manage Fleet", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/manage-fleet/{{id}}" } },
+        { "name": "List Blocked Fleet Drivers", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/blocked-fleet-drivers" } },
+        { "name": "Create Blocked Fleet Driver", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/blocked-fleet-drivers" } },
+        { "name": "Get Blocked Fleet Driver", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/blocked-fleet-drivers/{{id}}" } },
+        { "name": "Update Blocked Fleet Driver", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/blocked-fleet-drivers/{{id}}" } },
+        { "name": "Delete Blocked Fleet Driver", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/blocked-fleet-drivers/{{id}}" } },
+        { "name": "List Fleet Needed Document", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/fleet-needed-document" } },
+        { "name": "Create Fleet Needed Document", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/fleet-needed-document" } },
+        { "name": "Get Fleet Needed Document", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/fleet-needed-document/{{id}}" } },
+        { "name": "Update Fleet Needed Document", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/fleet-needed-document/{{id}}" } },
+        { "name": "Delete Fleet Needed Document", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/fleet-needed-document/{{id}}" } },
+        { "name": "List Owner Needed Document", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/owner-needed-document" } },
+        { "name": "Create Owner Needed Document", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/owner-needed-document" } },
+        { "name": "Get Owner Needed Document", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/owner-needed-document/{{id}}" } },
+        { "name": "Update Owner Needed Document", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/owner-needed-document/{{id}}" } },
+        { "name": "Delete Owner Needed Document", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/owner-needed-document/{{id}}" } },
+        { "name": "List Driver Needed Document", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/driver-needed-document" } },
+        { "name": "Create Driver Needed Document", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/driver-needed-document" } },
+        { "name": "Get Driver Needed Document", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/driver-needed-document/{{id}}" } },
+        { "name": "Update Driver Needed Document", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/driver-needed-document/{{id}}" } },
+        { "name": "Delete Driver Needed Document", "request": { "method": "DELETE", "url": "{{baseUrl}}/owner-management/driver-needed-document/{{id}}" } },
+        { "name": "List Owner Documents", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/owner-documents" } },
+        { "name": "Upload Owner Document", "request": { "method": "POST", "url": "{{baseUrl}}/owner-management/owner-documents" } },
+        { "name": "Review Owner Document", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/owner-documents/{{id}}/review" } },
+        { "name": "List Fleet Documents", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/fleet-documents" } },
+        { "name": "Review Fleet Document", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/fleet-documents/{{id}}/review" } },
+        { "name": "List Driver Documents", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/driver-documents" } },
+        { "name": "Review Driver Document", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/driver-documents/{{id}}/review" } },
+        { "name": "Approve Driver", "request": { "method": "PATCH", "url": "{{baseUrl}}/owner-management/drivers/{{id}}/approve" } },
+        { "name": "List Driver Ratings", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/driver-ratings" } },
+        { "name": "Driver Rating Details", "request": { "method": "GET", "url": "{{baseUrl}}/owner-management/driver-ratings/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Driver Subscriptions",
+      "item": [
+        { "name": "List Plans", "request": { "method": "GET", "url": "{{baseUrl}}/driver-subscriptions/plans/list" } },
+        { "name": "Create Plan", "request": { "method": "POST", "url": "{{baseUrl}}/driver-subscriptions/plans" } },
+        { "name": "Get Plan", "request": { "method": "GET", "url": "{{baseUrl}}/driver-subscriptions/plans/{{id}}" } },
+        { "name": "Update Plan", "request": { "method": "PATCH", "url": "{{baseUrl}}/driver-subscriptions/plans/{{id}}" } },
+        { "name": "Delete Plan", "request": { "method": "DELETE", "url": "{{baseUrl}}/driver-subscriptions/plans/{{id}}" } },
+        { "name": "List Subscriptions", "request": { "method": "GET", "url": "{{baseUrl}}/driver-subscriptions" } },
+        { "name": "Create Subscription", "request": { "method": "POST", "url": "{{baseUrl}}/driver-subscriptions" } },
+        { "name": "Get Subscription", "request": { "method": "GET", "url": "{{baseUrl}}/driver-subscriptions/{{id}}" } },
+        { "name": "Update Subscription", "request": { "method": "PATCH", "url": "{{baseUrl}}/driver-subscriptions/{{id}}" } },
+        { "name": "Delete Subscription", "request": { "method": "DELETE", "url": "{{baseUrl}}/driver-subscriptions/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Rewards",
+      "item": [
+        { "name": "List Reward Points", "request": { "method": "GET", "url": "{{baseUrl}}/rewards" } },
+        { "name": "Get Reward Point", "request": { "method": "GET", "url": "{{baseUrl}}/rewards/{{id}}" } },
+        { "name": "Adjust User Reward", "request": { "method": "POST", "url": "{{baseUrl}}/rewards/users/{{user_id}}/adjust" } },
+        { "name": "Adjust Driver Reward", "request": { "method": "POST", "url": "{{baseUrl}}/rewards/drivers/{{driver_id}}/adjust" } }
+      ]
+    },
+    {
+      "name": "Common Content",
+      "item": [
+        { "name": "List FAQs", "request": { "method": "GET", "url": "{{baseUrl}}/common/faqs" } },
+        { "name": "Create FAQ", "request": { "method": "POST", "url": "{{baseUrl}}/common/faqs" } },
+        { "name": "Get FAQ", "request": { "method": "GET", "url": "{{baseUrl}}/common/faqs/{{id}}" } },
+        { "name": "Update FAQ", "request": { "method": "PATCH", "url": "{{baseUrl}}/common/faqs/{{id}}" } },
+        { "name": "Delete FAQ", "request": { "method": "DELETE", "url": "{{baseUrl}}/common/faqs/{{id}}" } },
+        { "name": "List Cancellation Reasons", "request": { "method": "GET", "url": "{{baseUrl}}/common/cancellation-reasons" } },
+        { "name": "Create Cancellation Reason", "request": { "method": "POST", "url": "{{baseUrl}}/common/cancellation-reasons" } },
+        { "name": "Get Cancellation Reason", "request": { "method": "GET", "url": "{{baseUrl}}/common/cancellation-reasons/{{id}}" } },
+        { "name": "Update Cancellation Reason", "request": { "method": "PATCH", "url": "{{baseUrl}}/common/cancellation-reasons/{{id}}" } },
+        { "name": "Delete Cancellation Reason", "request": { "method": "DELETE", "url": "{{baseUrl}}/common/cancellation-reasons/{{id}}" } },
+        { "name": "List SOS", "request": { "method": "GET", "url": "{{baseUrl}}/common/sos" } },
+        { "name": "Create SOS", "request": { "method": "POST", "url": "{{baseUrl}}/common/sos" } },
+        { "name": "Get SOS", "request": { "method": "GET", "url": "{{baseUrl}}/common/sos/{{id}}" } },
+        { "name": "Update SOS", "request": { "method": "PATCH", "url": "{{baseUrl}}/common/sos/{{id}}" } },
+        { "name": "Delete SOS", "request": { "method": "DELETE", "url": "{{baseUrl}}/common/sos/{{id}}" } },
+        { "name": "List App Modules", "request": { "method": "GET", "url": "{{baseUrl}}/common/app-modules" } },
+        { "name": "Create App Module", "request": { "method": "POST", "url": "{{baseUrl}}/common/app-modules" } },
+        { "name": "Get App Module", "request": { "method": "GET", "url": "{{baseUrl}}/common/app-modules/{{id}}" } },
+        { "name": "Update App Module", "request": { "method": "PATCH", "url": "{{baseUrl}}/common/app-modules/{{id}}" } },
+        { "name": "Delete App Module", "request": { "method": "DELETE", "url": "{{baseUrl}}/common/app-modules/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Support Tickets",
+      "item": [
+        { "name": "List Titles", "request": { "method": "GET", "url": "{{baseUrl}}/support-tickets/titles" } },
+        { "name": "Create Title", "request": { "method": "POST", "url": "{{baseUrl}}/support-tickets/titles" } },
+        { "name": "Get Title", "request": { "method": "GET", "url": "{{baseUrl}}/support-tickets/titles/{{id}}" } },
+        { "name": "Update Title", "request": { "method": "PATCH", "url": "{{baseUrl}}/support-tickets/titles/{{id}}" } },
+        { "name": "Delete Title", "request": { "method": "DELETE", "url": "{{baseUrl}}/support-tickets/titles/{{id}}" } },
+        { "name": "List Tickets", "request": { "method": "GET", "url": "{{baseUrl}}/support-tickets" } },
+        { "name": "Get Ticket", "request": { "method": "GET", "url": "{{baseUrl}}/support-tickets/{{id}}" } },
+        { "name": "Reply Ticket", "request": { "method": "POST", "url": "{{baseUrl}}/support-tickets/{{id}}/reply" } },
+        { "name": "Update Ticket Status", "request": { "method": "PATCH", "url": "{{baseUrl}}/support-tickets/{{id}}/status" } }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "Report Options", "request": { "method": "GET", "url": "{{baseUrl}}/reports/options" } },
+        { "name": "Download User Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/user/download?status=active&date_option=this_month&file_format=csv" } },
+        { "name": "Download Driver Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/driver/download?transport_type=taxi&approval_status=approved&file_format=xlsx" } },
+        { "name": "Download Driver Duty Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/driver-duty/download?driver={{driver_id}}&date_option=this_month&file_format=csv" } },
+        { "name": "Download Owner Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/owner/download?approval_status=approved&file_format=csv" } },
+        { "name": "Download Finance Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/finance/download?trip_status=completed&payment_type=cash&file_format=xlsx" } },
+        { "name": "Download Fleet Finance Report", "request": { "method": "GET", "url": "{{baseUrl}}/reports/fleet-finance/download?trip_status=completed&file_format=csv" } }
+      ]
+    },
+    {
+      "name": "Admin Dashboard JSON",
+      "item": [
+        { "name": "Dashboard Page", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/page" } },
+        { "name": "Dashboard Data", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/data" } },
+        { "name": "Today Earnings", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/today-earnings" } },
+        { "name": "Overall Earnings", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/overall-earnings" } },
+        { "name": "Cancel Chart", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/cancel-chart" } },
+        { "name": "Owner Dashboard Page", "request": { "method": "GET", "url": "{{baseUrl}}/owner-dashboard/page" } },
+        { "name": "Owner Dashboard Data", "request": { "method": "GET", "url": "{{baseUrl}}/owner-dashboard/data" } },
+        { "name": "Owner Dashboard Earnings", "request": { "method": "GET", "url": "{{baseUrl}}/owner-dashboard/earnings" } },
+        { "name": "Overall Menu", "request": { "method": "GET", "url": "{{baseUrl}}/overall-menu" } }
+      ]
+    },
+    {
+      "name": "Admin Web Parity Routes",
+      "item": [
+        { "name": "Status", "request": { "method": "GET", "url": "{{baseUrl}}/status" } },
+        { "name": "Healthcheck", "request": { "method": "GET", "url": "{{baseUrl}}/healthcheck" } },
+        { "name": "Set Locale", "request": { "method": "POST", "url": "{{baseUrl}}/set-locale" } },
+        { "name": "Track Request", "request": { "method": "GET", "url": "{{baseUrl}}/track/request/{{request_id}}" } },
+        { "name": "Download User Invoice", "request": { "method": "GET", "url": "{{baseUrl}}/download-user-invoice/{{requestmodel}}" } },
+        { "name": "Download Driver Invoice", "request": { "method": "GET", "url": "{{baseUrl}}/download-driver-invoice/{{requestmodel}}" } },
+        { "name": "Landing Home", "request": { "method": "GET", "url": "{{baseUrl}}/" } },
+        { "name": "Landing Driver", "request": { "method": "GET", "url": "{{baseUrl}}/driver" } },
+        { "name": "Landing About Us", "request": { "method": "GET", "url": "{{baseUrl}}/aboutus" } },
+        { "name": "Landing User", "request": { "method": "GET", "url": "{{baseUrl}}/user" } },
+        { "name": "Landing Contact", "request": { "method": "GET", "url": "{{baseUrl}}/contact" } },
+        { "name": "Landing Privacy", "request": { "method": "GET", "url": "{{baseUrl}}/privacy" } },
+        { "name": "Landing Compliance", "request": { "method": "GET", "url": "{{baseUrl}}/compliance" } },
+        { "name": "Landing Terms", "request": { "method": "GET", "url": "{{baseUrl}}/terms" } },
+        { "name": "Landing DMV", "request": { "method": "GET", "url": "{{baseUrl}}/dmv" } },
+        { "name": "MI Login", "request": { "method": "GET", "url": "{{baseUrl}}/mi-login" } },
+        { "name": "PayPal", "request": { "method": "GET", "url": "{{baseUrl}}/paypal" } },
+        { "name": "PayPal Payment", "request": { "method": "POST", "url": "{{baseUrl}}/paypal/payment" } },
+        { "name": "PayPal Success", "request": { "method": "GET", "url": "{{baseUrl}}/paypal/payment/success" } },
+        { "name": "PayPal Cancel", "request": { "method": "GET", "url": "{{baseUrl}}/paypal/payment/cancel" } },
+        { "name": "Stripe", "request": { "method": "GET", "url": "{{baseUrl}}/stripe" } },
+        { "name": "Stripe Checkout", "request": { "method": "POST", "url": "{{baseUrl}}/stripe-checkout" } },
+        { "name": "Stripe Success", "request": { "method": "GET", "url": "{{baseUrl}}/stripe-checkout-success" } },
+        { "name": "Stripe Error", "request": { "method": "GET", "url": "{{baseUrl}}/stripe-checkout-error" } },
+        { "name": "Flutterwave", "request": { "method": "GET", "url": "{{baseUrl}}/flutterwave" } },
+        { "name": "Flutterwave Success", "request": { "method": "GET", "url": "{{baseUrl}}/flutterwave/payment/success" } },
+        { "name": "Cashfree", "request": { "method": "GET", "url": "{{baseUrl}}/cashfree" } },
+        { "name": "Cashfree Store", "request": { "method": "POST", "url": "{{baseUrl}}/cashfree/payments/store" } },
+        { "name": "Cashfree Success", "request": { "method": "GET", "url": "{{baseUrl}}/cashfree/payments/success" } },
+        { "name": "Paystack", "request": { "method": "GET", "url": "{{baseUrl}}/paystack" } },
+        { "name": "Paystack Success", "request": { "method": "GET", "url": "{{baseUrl}}/paystack/payment/success" } },
+        { "name": "Khalti", "request": { "method": "GET", "url": "{{baseUrl}}/khalti" } },
+        { "name": "Khalti Checkout", "request": { "method": "POST", "url": "{{baseUrl}}/khalti/checkout" } },
+        { "name": "Razorpay", "request": { "method": "GET", "url": "{{baseUrl}}/razorpay" } },
+        { "name": "Razorpay Success", "request": { "method": "GET", "url": "{{baseUrl}}/payment-success" } },
+        { "name": "MercadoPago", "request": { "method": "GET", "url": "{{baseUrl}}/mercadopago" } },
+        { "name": "MercadoPago Success", "request": { "method": "GET", "url": "{{baseUrl}}/mercadopago/payment/success" } },
+        { "name": "MercadoPago Webhook", "request": { "method": "POST", "url": "{{baseUrl}}/webhook/mercadopago" } },
+        { "name": "OpenPix", "request": { "method": "GET", "url": "{{baseUrl}}/open-pix" } },
+        { "name": "PayTech", "request": { "method": "GET", "url": "{{baseUrl}}/paytech" } },
+        { "name": "PayTech Initiate", "request": { "method": "POST", "url": "{{baseUrl}}/paytech/initiate" } },
+        { "name": "PayTech Success", "request": { "method": "GET", "url": "{{baseUrl}}/paytech/payment/success" } },
+        { "name": "Flexpaie", "request": { "method": "GET", "url": "{{baseUrl}}/flexpaie" } },
+        { "name": "Flexpaie Pay", "request": { "method": "POST", "url": "{{baseUrl}}/flexpaie/pay" } },
+        { "name": "Flexpaie Success", "request": { "method": "GET", "url": "{{baseUrl}}/flexpaie/payment/success" } },
+        { "name": "CCAvenue", "request": { "method": "GET", "url": "{{baseUrl}}/ccavenue" } },
+        { "name": "CCAvenue Checkout", "request": { "method": "POST", "url": "{{baseUrl}}/ccavenue/checkout" } },
+        { "name": "CCAvenue Success", "request": { "method": "GET", "url": "{{baseUrl}}/ccavenue/payment/success" } },
+        { "name": "CCAvenue Failure", "request": { "method": "GET", "url": "{{baseUrl}}/ccavenue/payment/failure" } },
+        { "name": "PayPhone", "request": { "method": "GET", "url": "{{baseUrl}}/payphone" } },
+        { "name": "PayPhone Success", "request": { "method": "GET", "url": "{{baseUrl}}/payphone/payment-success" } },
+        { "name": "MyFatoora", "request": { "method": "GET", "url": "{{baseUrl}}/myfatoora" } },
+        { "name": "MyFatoora Checkout", "request": { "method": "POST", "url": "{{baseUrl}}/myfatoora-checkout" } },
+        { "name": "MyFatoora Success", "request": { "method": "GET", "url": "{{baseUrl}}/myfatoora-checkout-success" } },
+        { "name": "Easypaisa", "request": { "method": "GET", "url": "{{baseUrl}}/easypaisa" } },
+        { "name": "Easypaisa Success", "request": { "method": "GET", "url": "{{baseUrl}}/easypaisa/payment-success" } },
+        { "name": "PayMongo", "request": { "method": "GET", "url": "{{baseUrl}}/paymongo" } },
+        { "name": "PayMongo Checkout", "request": { "method": "POST", "url": "{{baseUrl}}/paymongo-checkout" } },
+        { "name": "PayMongo Success", "request": { "method": "GET", "url": "{{baseUrl}}/paymongo-checkout-success" } },
+        { "name": "FedaPay", "request": { "method": "GET", "url": "{{baseUrl}}/fedapay" } },
+        { "name": "FedaPay Checkout", "request": { "method": "POST", "url": "{{baseUrl}}/fedapay-checkout" } },
+        { "name": "FedaPay Success", "request": { "method": "GET", "url": "{{baseUrl}}/fedapay-checkout-success" } },
+        { "name": "Success View", "request": { "method": "GET", "url": "{{baseUrl}}/success" } },
+        { "name": "Failure View", "request": { "method": "GET", "url": "{{baseUrl}}/failure" } },
+        { "name": "Pending View", "request": { "method": "GET", "url": "{{baseUrl}}/pending" } }
+      ]
+    }
+  ]
+}
