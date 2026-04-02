@@ -139,9 +139,9 @@ async function createOwner(req, res, next) {
     if (!name) errors.name = "name is required";
     if (!mobile) errors.mobile = "mobile is required";
     if (!password) errors.password = "password is required";
-    if (!country || !mongoose.Types.ObjectId.isValid(country)) {
-      errors.country = "valid country is required";
-    }
+    // if (!country || !mongoose.Types.ObjectId.isValid(country)) {
+    //   errors.country = "valid country is required";
+    // }
 
     if (email) {
       const exists = await User.findOne({ email: String(email).toLowerCase() }).lean();

@@ -24,6 +24,8 @@ adminRoutes.use("/owners", require("./adminOwners"));
 adminRoutes.use("/requests", require("./adminRequests"));
 adminRoutes.use("/promos", require("./adminPromos"));
 adminRoutes.use("/service-locations", require("./adminServiceLocations"));
+// Backward-compatible alias used by some clients.
+adminRoutes.use("/service_locations", require("./adminServiceLocations"));
 adminRoutes.use("/banners", require("./adminBanners"));
 adminRoutes.use("/zones", require("./adminZones"));
 adminRoutes.use("/types", require("./adminVehicleTypes"));
@@ -37,6 +39,7 @@ adminRoutes.use("/admins", require("./adminAdmins"));
 adminRoutes.use("/rewards", require("./adminRewards"));
 adminRoutes.use("/common", require("./adminCommonContent"));
 adminRoutes.use("/support-tickets", require("./adminSupportTickets"));
+adminRoutes.use("/reports", require("./adminReports"));
 
 /** Laravel web.php auth JSON + Inertia page props as JSON (dashboard widgets). */
 adminRoutes.use(require("./adminInertiaJson"));

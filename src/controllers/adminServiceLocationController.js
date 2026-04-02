@@ -38,8 +38,28 @@ async function listServiceLocations(req, res, next) {
       ServiceLocation.countDocuments(filter),
     ]);
 
+    const serviceLocationIds = items.map((i) => i._id);
+    const zones = serviceLocationIds.length
+      ? await Zone.find({ service_location_id: { $in: serviceLocationIds } })
+          .select("_id name service_location_id")
+          .sort({ name: 1 })
+          .lean()
+      : [];
+
+    const zoneMap = new Map();
+    for (const z of zones) {
+      const k = String(z.service_location_id);
+      if (!zoneMap.has(k)) zoneMap.set(k, []);
+      zoneMap.get(k).push({ id: z._id, name: z.name });
+    }
+
+    const results = items.map((item) => ({
+      ...item,
+      zones: zoneMap.get(String(item._id)) || [],
+    }));
+
     return ok(res, {
-      results: items,
+      results,
       paginator: {
         total,
         per_page: limit,
@@ -62,7 +82,18 @@ async function getServiceLocation(req, res, next) {
       .populate("country_id", "name code dial_code")
       .lean();
     if (!doc) return err(res, 404, "Service location not found");
-    return ok(res, { service_location: doc });
+
+    const zones = await Zone.find({ service_location_id: id })
+      .select("_id name")
+      .sort({ name: 1 })
+      .lean();
+
+    return ok(res, {
+      service_location: {
+        ...doc,
+        zones: zones.map((z) => ({ id: z._id, name: z.name })),
+      },
+    });
   } catch (e) {
     next(e);
   }
