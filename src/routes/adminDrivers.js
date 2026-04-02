@@ -1,10 +1,17 @@
 const express = require("express");
 const adminDriverController = require("../controllers/adminDriverController");
+const { uploadExcel, uploadExcelError } = require("../middleware/uploadExcel");
 
 const router = express.Router();
 
 router.get("/", adminDriverController.listDrivers);
 router.post("/", adminDriverController.createDriver);
+router.post(
+  "/bulk-upload",
+  uploadExcel.single("file"),
+  uploadExcelError,
+  adminDriverController.bulkUploadDrivers
+);
 router.get("/deleted", adminDriverController.listDeletedDrivers);
 router.get("/deleted/:id/profile", adminDriverController.getDeletedDriverProfile);
 router.patch("/deleted/:id/restore", adminDriverController.restoreDeletedDriver);

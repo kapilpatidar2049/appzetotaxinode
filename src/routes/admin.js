@@ -29,6 +29,8 @@ adminRoutes.use("/zones", require("./adminZones"));
 adminRoutes.use("/types", require("./adminVehicleTypes"));
 adminRoutes.use("/goods-types", require("./adminGoodsTypes"));
 adminRoutes.use("/wallet", require("./adminWallet"));
+adminRoutes.use("/referral", require("./adminReferral"));
+adminRoutes.use("/payment-methods", require("./adminPaymentMethods"));
 adminRoutes.use("/owner-management", require("./adminOwnerManagement"));
 adminRoutes.use("/driver-subscriptions", require("./adminDriverSubscriptions"));
 adminRoutes.use("/rewards", require("./adminRewards"));

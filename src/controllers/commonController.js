@@ -15,11 +15,14 @@ const NotificationChannel = require("../models/NotificationChannel");
 const PromotionTemplate = require("../models/PromotionTemplate");
 const VehicleType = require("../models/VehicleType");
 const SubVehicleType = require("../models/SubVehicleType");
+const Zone = require("../models/Zone");
+const SetPrice = require("../models/SetPrice");
 const LandingQuickLink = require("../models/LandingQuickLink");
 const Setting = require("../models/Setting");
 const Language = require("../models/Language");
 const GoodsType = require("../models/GoodsType");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 
 function ok(res, data = null, message = "success") {
   return res.json({ success: true, message, data });
@@ -381,12 +384,51 @@ async function mobileTerms(req, res) {
 async function vehicleTypes(req, res) {
   try {
     const { service_location } = req.params;
-    
-      const exists = await ServiceLocation.findById(service_location).lean();
-      if (!exists) return ok(res, []);
-      const rows = await VehicleType.find({ active: true }).sort({ order: 1, createdAt: 1 }).lean();
-      return ok(res, rows);
-    
+    const transportTypeRaw = req.query.transport_type ?? req.body?.transport_type;
+
+    const exists = await ServiceLocation.findById(service_location).lean();
+    if (!exists) return ok(res, []);
+
+    const transportType = transportTypeRaw ? String(transportTypeRaw).toLowerCase() : null;
+    if (transportType && !["taxi", "delivery"].includes(transportType)) {
+      return fail(res, "transport_type must be taxi or delivery", 422);
+    }
+
+    const zones = await Zone.find({ service_location_id: service_location, active: true })
+      .select("_id")
+      .lean();
+    const zoneIds = zones.map((z) => String(z._id));
+    if (!zoneIds.length) return ok(res, []);
+
+    const setPriceFilter = {
+      zone_id: { $in: zoneIds },
+      active: true,
+      ...(transportType ? { transport_type: transportType } : {}),
+    };
+    const setPriceVehicleTypes = await SetPrice.distinct("vehicle_type", setPriceFilter);
+    if (!setPriceVehicleTypes.length) return ok(res, []);
+
+    const objectIds = setPriceVehicleTypes
+      .filter((v) => mongoose.Types.ObjectId.isValid(String(v)))
+      .map((v) => new mongoose.Types.ObjectId(String(v)));
+    const names = setPriceVehicleTypes
+      .map((v) => String(v).trim())
+      .filter((v) => v.length > 0);
+
+    const orConditions = [];
+    if (objectIds.length) orConditions.push({ _id: { $in: objectIds } });
+    if (names.length) orConditions.push({ name: { $in: names } });
+    if (!orConditions.length) return ok(res, []);
+
+    const rows = await VehicleType.find({
+      active: true,
+      ...(transportType ? { transport_type: transportType } : {}),
+      $or: orConditions,
+    })
+      .sort({ order: 1, createdAt: 1 })
+      .lean();
+
+    return ok(res, rows);
   } catch {
     return fail(res);
   }
