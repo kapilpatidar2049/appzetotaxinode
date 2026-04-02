@@ -5,6 +5,8 @@ const { uploadExcel, uploadExcelError } = require("../middleware/uploadExcel");
 const router = express.Router();
 
 router.get("/", adminDriverController.listDrivers);
+router.get("/pending", adminDriverController.listPendingDrivers);
+router.get("/approved", adminDriverController.listApprovedDrivers);
 router.post("/", adminDriverController.createDriver);
 router.post(
   "/bulk-upload",

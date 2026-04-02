@@ -359,6 +359,7 @@ async function listDrivers(req, res, next) {
     const includeOwner =
       req.query.include_owner === "1" || req.query.include_owner === "true";
     const driverType = String(req.query.driver_type || "").toLowerCase();
+    const approveRaw = req.query.approve;
 
     const parts = [];
     if (driverType === "normal") {
@@ -371,6 +372,14 @@ async function listDrivers(req, res, next) {
       parts.push({
         $or: [{ owner_id: null }, { owner_id: { $exists: false } }],
       });
+    }
+
+    // Optional filter for Admin UI pages: Pending vs Approved drivers.
+    // Accepts: true/false, 1/0, approved/pending.
+    if (approveRaw !== undefined && approveRaw !== null && String(approveRaw).trim() !== "") {
+      const v = String(approveRaw).trim().toLowerCase();
+      if (["1", "true", "approved"].includes(v)) parts.push({ approve: true });
+      else if (["0", "false", "pending"].includes(v)) parts.push({ approve: false });
     }
 
     if (search) {
@@ -437,6 +446,18 @@ async function listDrivers(req, res, next) {
   } catch (e) {
     next(e);
   }
+}
+
+async function listPendingDrivers(req, res, next) {
+  req.query = req.query || {};
+  req.query.approve = "false";
+  return listDrivers(req, res, next);
+}
+
+async function listApprovedDrivers(req, res, next) {
+  req.query = req.query || {};
+  req.query.approve = "true";
+  return listDrivers(req, res, next);
 }
 
 async function getDriver(req, res, next) {
@@ -794,6 +815,8 @@ async function deleteDeletedDriverPermanently(req, res, next) {
 
 module.exports = {
   listDrivers,
+  listPendingDrivers,
+  listApprovedDrivers,
   getDriver,
   createDriver,
   bulkUploadDrivers,

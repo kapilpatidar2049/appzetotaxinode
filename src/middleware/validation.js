@@ -226,6 +226,41 @@ const schemas = {
     requestEta: genericObject,
     listPackages: genericObject,
   },
+  adminAdmins: {
+    create: Joi.object({
+      first_name: Joi.string().trim().required(),
+      last_name: Joi.string().trim().required(),
+      email: Joi.string().email().required(),
+      mobile: Joi.string().trim().required(),
+      password: Joi.string().required(),
+      role: Joi.string().valid("admin", "dispatcher").required(),
+      active: Joi.boolean().optional(),
+
+      // AdminDetail optional fields
+      address: Joi.string().allow("", null).optional(),
+      country: Joi.string().allow("", null).optional(),
+      pincode: Joi.string().allow("", null).optional(),
+      timezone: Joi.string().allow("", null).optional(),
+      emergency_contact: Joi.string().allow("", null).optional(),
+      area_name: Joi.string().allow("", null).optional(),
+    }),
+    update: Joi.object({
+      first_name: Joi.string().trim().optional(),
+      last_name: Joi.string().trim().optional(),
+      email: Joi.string().email().optional(),
+      mobile: Joi.string().trim().optional(),
+      password: Joi.string().optional(),
+      role: Joi.string().valid("admin", "dispatcher", "super-admin").optional(),
+      active: Joi.boolean().optional(),
+
+      address: Joi.string().allow("", null).optional(),
+      country: Joi.string().allow("", null).optional(),
+      pincode: Joi.string().allow("", null).optional(),
+      timezone: Joi.string().allow("", null).optional(),
+      emergency_contact: Joi.string().allow("", null).optional(),
+      area_name: Joi.string().allow("", null).optional(),
+    }),
+  },
 };
 
 module.exports = {

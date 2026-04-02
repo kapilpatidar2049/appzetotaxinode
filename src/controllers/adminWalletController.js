@@ -592,6 +592,26 @@ async function updateWithdrawalStatus(req, res, next) {
   }
 }
 
+async function deleteWithdrawalRequest(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+
+    const doc = await WalletWithdrawalRequest.findById(id).lean();
+    if (!doc) return err(res, 404, "Withdrawal request not found");
+
+    // Only "requested" withdrawal can be removed by admin.
+    if (doc.status !== "requested") {
+      return err(res, 422, "Only requested withdrawal can be deleted");
+    }
+
+    await WalletWithdrawalRequest.deleteOne({ _id: id });
+    return ok(res, { id }, "Withdrawal request deleted");
+  } catch (e) {
+    next(e);
+  }
+}
+
 module.exports = {
   listUserWallets,
   getUserWallet,
@@ -609,5 +629,6 @@ module.exports = {
   listWithdrawals,
   getWithdrawal,
   updateWithdrawalStatus,
+  deleteWithdrawalRequest,
 };
 

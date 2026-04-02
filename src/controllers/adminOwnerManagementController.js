@@ -11,6 +11,8 @@ const DriverNeededDocument = require("../models/DriverNeededDocument");
 const FleetDocument = require("../models/FleetDocument");
 const DriverDocument = require("../models/DriverDocument");
 const RequestRating = require("../models/RequestRating");
+const User = require("../models/User");
+const dash = require("../services/adminDashboardMongo");
 
 function ok(res, data, message = "success") {
   return res.json({ success: true, message, data });
@@ -78,19 +80,62 @@ function normalizeReviewStatus(value) {
 
 async function dashboard(req, res, next) {
   try {
-    const [owners, fleets, blockedDrivers, ownerDocs, fleetDocs] = await Promise.all([
+    const toNum = (v) => (v === undefined || v === null || Number.isNaN(Number(v)) ? 0 : Number(v));
+    const serviceLocationId = req.query.service_location_id ?? req.query.service_location ?? "all";
+
+    // Sidebar counts for Owner Management pages.
+    // Keep existing keys for backward compatibility, but also add extra keys
+    // needed by the UI (Fleet Drivers, Pending Fleet Drivers, Deleted Owners, etc.).
+    // UI semantics:
+    // - Fleet Drivers: drivers linked to an owner (fleet drivers) that are approved and not blocked
+    // - Pending Fleet Drivers: same, but approve=false and not blocked
+    const [
+      owners,
+      fleetsTotal,
+      fleetApprovedDriversCount,
+      fleetPendingDriversCount,
+      blockedFleetDrivers,
+      ownerDocs,
+      fleetDocs,
+      deletedOwners,
+      ownerEarnings,
+    ] = await Promise.all([
       Owner.countDocuments({}),
       Fleet.countDocuments({}),
-      Driver.countDocuments({ active: false }),
+      Driver.countDocuments({
+        owner_id: { $exists: true, $ne: null },
+        active: true,
+        approve: true,
+      }),
+      Driver.countDocuments({
+        owner_id: { $exists: true, $ne: null },
+        active: true,
+        approve: false,
+      }),
+      // Matches listBlockedFleetDrivers controller filter.
+      Driver.countDocuments({ active: false, owner_id: { $exists: true, $ne: null } }),
       OwnerNeededDocument.countDocuments({}),
       FleetNeededDocument.countDocuments({}),
+      // adminOwners.js delete flow sets: user.is_deleted_at = now
+      User.countDocuments({ role: "owner", is_deleted_at: { $ne: null } }),
+      dash.getOwnerEarnings(serviceLocationId),
     ]);
+
     return ok(res, {
-      owners,
-      fleets,
-      blocked_drivers: blockedDrivers,
-      owner_needed_documents: ownerDocs,
-      fleet_needed_documents: fleetDocs,
+      owners: toNum(owners),
+      // Legacy keys
+      fleets: toNum(fleetsTotal),
+      blocked_drivers: toNum(blockedFleetDrivers),
+      owner_needed_documents: toNum(ownerDocs),
+      fleet_needed_documents: toNum(fleetDocs),
+
+      // New keys for dashboard UI
+      fleets_approved: toNum(fleetApprovedDriversCount),
+      fleets_pending: toNum(fleetPendingDriversCount),
+      fleet_drivers: toNum(fleetApprovedDriversCount),
+      pending_fleet_drivers: toNum(fleetPendingDriversCount),
+      deleted_owners: toNum(deletedOwners),
+      ...(ownerEarnings && typeof ownerEarnings === "object" ? ownerEarnings : {}),
     });
   } catch (e) {
     next(e);

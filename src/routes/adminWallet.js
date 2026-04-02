@@ -24,6 +24,7 @@ router.post("/drivers/:driver_id/deduct", adminWalletController.deductDriverWall
 router.get("/withdrawals", adminWalletController.listWithdrawals);
 router.get("/withdrawals/:id", adminWalletController.getWithdrawal);
 router.patch("/withdrawals/:id", adminWalletController.updateWithdrawalStatus);
+router.delete("/withdrawals/:id", adminWalletController.deleteWithdrawalRequest);
 
 module.exports = router;
 

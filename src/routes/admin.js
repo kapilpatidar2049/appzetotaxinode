@@ -33,6 +33,7 @@ adminRoutes.use("/referral", require("./adminReferral"));
 adminRoutes.use("/payment-methods", require("./adminPaymentMethods"));
 adminRoutes.use("/owner-management", require("./adminOwnerManagement"));
 adminRoutes.use("/driver-subscriptions", require("./adminDriverSubscriptions"));
+adminRoutes.use("/admins", require("./adminAdmins"));
 adminRoutes.use("/rewards", require("./adminRewards"));
 adminRoutes.use("/common", require("./adminCommonContent"));
 adminRoutes.use("/support-tickets", require("./adminSupportTickets"));
