@@ -14,6 +14,7 @@ function req(name, method, pathSuffix, opts = {}) {
     noauth = false,
     body = null,
     rawBody = "{}",
+    formdata = null,
   } = opts;
   const r = {
     name,
@@ -33,6 +34,9 @@ function req(name, method, pathSuffix, opts = {}) {
   if (body === "raw") {
     r.request.header = [{ key: "Content-Type", value: "application/json" }];
     r.request.body = { mode: "raw", raw: rawBody };
+  }
+  if (body === "formdata" && formdata) {
+    r.request.body = { mode: "formdata", formdata };
   }
   return r;
 }
@@ -475,6 +479,14 @@ const collection = {
           item: [
             req("List users", "GET", "/api/v1/admin/users?page=1&limit=20", { tokenVar: "adminToken" }),
             req("Create user", "POST", "/api/v1/admin/users", { tokenVar: "adminToken", body: "raw", rawBody: "{}" }),
+            req("Bulk upload users (xlsx)", "POST", "/api/v1/admin/users/bulk-upload", {
+              tokenVar: "adminToken",
+              body: "formdata",
+              formdata: [
+                { key: "file", type: "file", src: [] },
+                { key: "default_password", type: "text", value: "ChangeMe123!" },
+              ],
+            }),
             req("Get user", "GET", "/api/v1/admin/users/{{adminUserId}}", { tokenVar: "adminToken" }),
             req("Patch user", "PATCH", "/api/v1/admin/users/{{adminUserId}}", { tokenVar: "adminToken", body: "raw", rawBody: "{}" }),
             req("Delete user", "DELETE", "/api/v1/admin/users/{{adminUserId}}", { tokenVar: "adminToken" }),
@@ -539,6 +551,8 @@ const collection = {
             req("User wallet adjust", "POST", "/api/v1/admin/wallet/users/{{adminUserId}}/adjust", { tokenVar: "adminToken", body: "raw", rawBody: "{\"amount\":100,\"payment_type\":\"credit\",\"remarks\":\"admin credit\"}" }),
             req("Driver wallet adjust", "POST", "/api/v1/admin/wallet/drivers/{{adminDriverId}}/adjust", { tokenVar: "adminToken", body: "raw", rawBody: "{\"amount\":50,\"payment_type\":\"debit\",\"remarks\":\"admin debit\"}" }),
             req("Negative driver wallets", "GET", "/api/v1/admin/wallet/drivers/negative", { tokenVar: "adminToken" }),
+            req("Drivers with withdrawal requests", "GET", "/api/v1/admin/wallet/drivers/withdrawals", { tokenVar: "adminToken" }),
+            req("Driver withdrawal requests detail", "GET", "/api/v1/admin/wallet/drivers/{{adminDriverId}}/withdrawals", { tokenVar: "adminToken" }),
           ],
         },
         {

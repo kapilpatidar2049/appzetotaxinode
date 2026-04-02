@@ -1,10 +1,17 @@
 const express = require("express");
 const adminUserController = require("../controllers/adminUserController");
+const { uploadExcel, uploadExcelError } = require("../middleware/uploadExcel");
 
 const router = express.Router();
 
 router.get("/", adminUserController.listUsers);
 router.post("/", adminUserController.createUser);
+router.post(
+  "/bulk-upload",
+  uploadExcel.single("file"),
+  uploadExcelError,
+  adminUserController.bulkUploadUsers
+);
 router.get("/delete-requests", adminUserController.listDeleteRequests);
 router.get("/deleted", adminUserController.listDeleteRequests);
 router.get("/deleted/:id/profile", adminUserController.getDeletedUserProfile);

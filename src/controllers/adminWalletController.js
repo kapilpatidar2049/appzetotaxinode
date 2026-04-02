@@ -393,6 +393,125 @@ async function deductDriverWalletAmount(req, res, next) {
 }
 
 // Withdrawal requests list + status update
+
+const withdrawalDriverLookup = [
+  {
+    $lookup: {
+      from: "drivers",
+      localField: "user_id",
+      foreignField: "user_id",
+      as: "drv",
+    },
+  },
+  {
+    $addFields: {
+      effDriverId: { $ifNull: ["$driver_id", { $arrayElemAt: ["$drv._id", 0] }] },
+    },
+  },
+  { $match: { effDriverId: { $ne: null } } },
+];
+
+/** Drivers who have at least one withdrawal request (summary per driver). Includes legacy rows with user_id only. */
+async function listDriversWithWithdrawals(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const [totalAgg, grouped] = await Promise.all([
+      WalletWithdrawalRequest.aggregate([
+        ...withdrawalDriverLookup,
+        { $group: { _id: "$effDriverId" } },
+        { $count: "total" },
+      ]),
+      WalletWithdrawalRequest.aggregate([
+        ...withdrawalDriverLookup,
+        {
+          $group: {
+            _id: "$effDriverId",
+            withdrawal_request_count: { $sum: 1 },
+            last_request_at: { $max: "$createdAt" },
+            pending_count: {
+              $sum: { $cond: [{ $eq: ["$status", "requested"] }, 1, 0] },
+            },
+          },
+        },
+        { $sort: { last_request_at: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+      ]),
+    ]);
+
+    const total = totalAgg[0]?.total || 0;
+    const driverIds = grouped.map((g) => g._id).filter(Boolean);
+    const drivers = await Driver.find({ _id: { $in: driverIds } })
+      .select("name mobile email owner_id")
+      .lean();
+    const byId = new Map(drivers.map((d) => [String(d._id), d]));
+
+    const results = grouped.map((g) => ({
+      driver_id: g._id,
+      driver: byId.get(String(g._id)) || null,
+      withdrawal_request_count: g.withdrawal_request_count,
+      pending_count: g.pending_count,
+      last_request_at: g.last_request_at,
+    }));
+
+    return ok(res, {
+      results,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+/** All withdrawal requests for one driver (by driver_id or same user as driver). */
+async function listWithdrawalsForDriver(req, res, next) {
+  try {
+    const { driver_id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(driver_id)) return err(res, 400, "Invalid driver id");
+
+    const driver = await Driver.findById(driver_id).select("name mobile email user_id").lean();
+    if (!driver) return err(res, 404, "Driver not found");
+
+    const { page, limit, skip } = parsePage(req);
+    const { status } = req.query;
+    const filter = {
+      $or: [{ driver_id: driver._id }, { user_id: driver.user_id }],
+    };
+    if (status) filter.status = status;
+
+    const [items, total] = await Promise.all([
+      WalletWithdrawalRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("user_id", "name email mobile")
+        .populate("driver_id", "name mobile email")
+        .populate("owner_id", "name mobile email")
+        .lean(),
+      WalletWithdrawalRequest.countDocuments(filter),
+    ]);
+
+    const { user_id: _uid, ...driverPublic } = driver;
+    return ok(res, {
+      driver: driverPublic,
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
 async function listWithdrawals(req, res, next) {
   try {
     const { page, limit, skip } = parsePage(req);
@@ -481,10 +600,12 @@ module.exports = {
   deductUserWalletAmount,
   listDriverWallets,
   listNegativeDriverWallets,
+  listDriversWithWithdrawals,
   getDriverWallet,
   adjustDriverWallet,
   addDriverWalletAmount,
   deductDriverWalletAmount,
+  listWithdrawalsForDriver,
   listWithdrawals,
   getWithdrawal,
   updateWithdrawalStatus,

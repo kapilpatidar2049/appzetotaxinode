@@ -36,6 +36,41 @@ function normalizeDocumentFor(value) {
   return null;
 }
 
+const defaultNeededDocOpts = { includeAccountType: true };
+
+/** Driver: persists document_for + account_type. Owner/Fleet: document_for only (includeAccountType: false). */
+function mergeNeededDocumentCreateBody(body, opts = defaultNeededDocOpts) {
+  const includeAccountType = opts.includeAccountType !== false;
+  const { document_for, account_type, ...rest } = body || {};
+  const forSource = document_for !== undefined ? document_for : account_type;
+  const parsed = normalizeDocumentFor(forSource);
+  if (forSource !== undefined && !parsed) {
+    return { ok: false, message: "document_for must be normal, fleet, or both" };
+  }
+  const finalFor = parsed || "both";
+  return {
+    ok: true,
+    payload: includeAccountType
+      ? { ...rest, document_for: finalFor, account_type: finalFor }
+      : { ...rest, document_for: finalFor },
+  };
+}
+
+/** Same includeAccountType rule as create. */
+function mergeNeededDocumentUpdateBody(body, opts = defaultNeededDocOpts) {
+  const includeAccountType = opts.includeAccountType !== false;
+  const { document_for, account_type, ...rest } = body || {};
+  const updates = { ...rest };
+  const forSource = document_for !== undefined ? document_for : account_type;
+  if (forSource !== undefined) {
+    const parsed = normalizeDocumentFor(forSource);
+    if (!parsed) return { ok: false, message: "document_for must be normal, fleet, or both" };
+    updates.document_for = parsed;
+    if (includeAccountType) updates.account_type = parsed;
+  }
+  return { ok: true, updates };
+}
+
 function normalizeReviewStatus(value) {
   const v = String(value || "").toLowerCase();
   return ["pending", "approved", "rejected"].includes(v) ? v : null;
@@ -407,7 +442,7 @@ async function deleteBlockedFleetDriver(req, res, next) {
   }
 }
 
-function buildDocCrud(model, keyName) {
+function buildDocCrud(model, keyName, neededDocOpts = defaultNeededDocOpts) {
   return {
     async list(req, res, next) {
       try {
@@ -444,9 +479,10 @@ function buildDocCrud(model, keyName) {
 
     async create(req, res, next) {
       try {
-        const { name } = req.body || {};
-        if (!name) return err(res, 422, "name is required");
-        const doc = await model.create(req.body || {});
+        const r = mergeNeededDocumentCreateBody(req.body, neededDocOpts);
+        if (!r.ok) return err(res, 422, r.message);
+        if (!r.payload.name) return err(res, 422, "name is required");
+        const doc = await model.create(r.payload);
         return ok(res, { [keyName]: doc }, `${keyName} created`);
       } catch (e) {
         next(e);
@@ -457,7 +493,9 @@ function buildDocCrud(model, keyName) {
       try {
         const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, `Invalid ${keyName} id`);
-        const doc = await model.findByIdAndUpdate(id, { $set: req.body || {} }, { new: true }).lean();
+        const r = mergeNeededDocumentUpdateBody(req.body || {}, neededDocOpts);
+        if (!r.ok) return err(res, 422, r.message);
+        const doc = await model.findByIdAndUpdate(id, { $set: r.updates }, { new: true }).lean();
         if (!doc) return err(res, 404, `${keyName} not found`);
         return ok(res, { [keyName]: doc }, `${keyName} updated`);
       } catch (e) {
@@ -479,8 +517,12 @@ function buildDocCrud(model, keyName) {
   };
 }
 
-const ownerDocCrud = buildDocCrud(OwnerNeededDocument, "owner_needed_document");
-const fleetDocCrud = buildDocCrud(FleetNeededDocument, "fleet_needed_document");
+const ownerDocCrud = buildDocCrud(OwnerNeededDocument, "owner_needed_document", {
+  includeAccountType: false,
+});
+const fleetDocCrud = buildDocCrud(FleetNeededDocument, "fleet_needed_document", {
+  includeAccountType: false,
+});
 
 const driverDocCrud = {
   async list(req, res, next) {
@@ -532,19 +574,11 @@ const driverDocCrud = {
 
   async create(req, res, next) {
     try {
-      const { name, document_for, ...rest } = req.body || {};
-      if (!name) return err(res, 422, "name is required");
-      const parsed = normalizeDocumentFor(document_for);
-      if (document_for !== undefined && !parsed) {
-        return err(res, 422, "document_for must be normal, fleet, or both");
-      }
-      const finalFor = parsed || "both";
-      const doc = await DriverNeededDocument.create({
-        name,
-        ...rest,
-        document_for: finalFor,
-        account_type: finalFor,
-      });
+      const r = mergeNeededDocumentCreateBody(req.body, { includeAccountType: true });
+      if (!r.ok) return err(res, 422, r.message);
+      if (!r.payload.name) return err(res, 422, "name is required");
+      const doc = await DriverNeededDocument.create(r.payload);
+      const finalFor = r.payload.document_for;
       return ok(
         res,
         { driver_needed_document: { ...doc.toObject(), document_for: finalFor } },
@@ -559,17 +593,11 @@ const driverDocCrud = {
     try {
       const { id } = req.params;
       if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid driver needed document id");
-      const { document_for, ...rest } = req.body || {};
-      const updates = { ...rest };
-      if (document_for !== undefined) {
-        const parsed = normalizeDocumentFor(document_for);
-        if (!parsed) return err(res, 422, "document_for must be normal, fleet, or both");
-        updates.document_for = parsed;
-        updates.account_type = parsed;
-      }
+      const r = mergeNeededDocumentUpdateBody(req.body || {}, { includeAccountType: true });
+      if (!r.ok) return err(res, 422, r.message);
       const doc = await DriverNeededDocument.findByIdAndUpdate(
         id,
-        { $set: updates },
+        { $set: r.updates },
         { new: true }
       ).lean();
       if (!doc) return err(res, 404, "driver_needed_document not found");

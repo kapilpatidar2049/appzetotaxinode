@@ -5,7 +5,7 @@
     "description": "Small collection for deleted users/drivers management + user/driver review history APIs."
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "baseUrl", "value": "https://taxi-a276.onrender.com" },
     { "key": "adminToken", "value": "" },
     { "key": "adminUserId", "value": "" },
     { "key": "adminDriverId", "value": "" }

@@ -476,7 +476,7 @@ async function listDeletedDrivers(req, res, next) {
     const search = (req.query.search || "").trim();
     const userFilter = {
       role: "driver",
-      is_deleted_at: { $ne: null },
+      is_deleted_at: { $ne: null }, 
     };
     if (search) {
       const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");

@@ -30,6 +30,7 @@ adminRoutes.use("/types", require("./adminVehicleTypes"));
 adminRoutes.use("/goods-types", require("./adminGoodsTypes"));
 adminRoutes.use("/wallet", require("./adminWallet"));
 adminRoutes.use("/owner-management", require("./adminOwnerManagement"));
+adminRoutes.use("/driver-subscriptions", require("./adminDriverSubscriptions"));
 adminRoutes.use("/rewards", require("./adminRewards"));
 adminRoutes.use("/common", require("./adminCommonContent"));
 adminRoutes.use("/support-tickets", require("./adminSupportTickets"));

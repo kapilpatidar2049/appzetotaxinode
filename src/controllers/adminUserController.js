@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
+const XLSX = require("xlsx");
 const User = require("../models/User");
+const Country = require("../models/Country");
 const Role = require("../models/Role");
 const RoleUser = require("../models/RoleUser");
 const UserWallet = require("../models/UserWallet");
@@ -47,6 +49,55 @@ async function attachRole(userId, slug) {
     { $setOnInsert: { role_id: role._id, user_id: userId } },
     { upsert: true }
   );
+}
+
+/** Normalize spreadsheet column keys: "Name" -> "name", "Country Code" -> "country_code" */
+function normalizeSheetRow(row) {
+  const o = {};
+  for (const [k, v] of Object.entries(row)) {
+    const key = String(k).trim().toLowerCase().replace(/\s+/g, "_");
+    if (v === null || v === undefined) {
+      o[key] = "";
+    } else if (typeof v === "number" && key === "mobile") {
+      o[key] = String(v);
+    } else {
+      o[key] = typeof v === "string" ? v.trim() : v;
+    }
+  }
+  return o;
+}
+
+/**
+ * Country cell: Mongo ObjectId, 2-letter ISO code (e.g. IN), dial code digits (e.g. 91), or country name (exact, case-insensitive).
+ */
+async function resolveCountryId(raw) {
+  if (raw === null || raw === undefined || raw === "") return undefined;
+  const s = String(raw).trim();
+  if (!s) return undefined;
+
+  if (mongoose.Types.ObjectId.isValid(s) && String(new mongoose.Types.ObjectId(s)) === s) {
+    const c = await Country.findById(s).select("_id").lean();
+    return c ? c._id : null;
+  }
+
+  if (s.length === 2) {
+    const c = await Country.findOne({ code: s.toUpperCase() }).select("_id").lean();
+    return c ? c._id : null;
+  }
+
+  const digits = s.replace(/\D/g, "");
+  if (digits.length >= 1 && digits.length <= 4) {
+    const c = await Country.findOne({
+      $or: [{ dial_code: digits }, { dial_code: `+${digits}` }],
+    })
+      .select("_id")
+      .lean();
+    if (c) return c._id;
+  }
+
+  const esc = s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const c = await Country.findOne({ name: new RegExp(`^${esc}$`, "i") }).select("_id").lean();
+  return c ? c._id : null;
 }
 
 async function listUsers(req, res, next) {
@@ -190,6 +241,156 @@ async function createUser(req, res, next) {
       message: "user created successfully.",
       successMessage: "user created successfully.",
       user,
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+/**
+ * POST multipart: field `file` (.xlsx / .xls / .csv), optional `default_password`.
+ * Sheet columns (header row): Name, Email, Mobile, Gender, Country, Password (optional).
+ * Matches sample_upload.xlsx — first sheet or sheet named "Users List".
+ * Country: MongoDB ObjectId, 2-letter code (e.g. IN), dial code (e.g. 91), or exact country name.
+ */
+async function bulkUploadUsers(req, res, next) {
+  try {
+    if (!req.file?.buffer?.length) {
+      return err(res, 400, "Spreadsheet file is required (multipart field: file)");
+    }
+
+    const defaultPassword = String(req.body?.default_password ?? "").trim();
+
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer", cellDates: true });
+    const sheetName = workbook.SheetNames.includes("Users List")
+      ? "Users List"
+      : workbook.SheetNames[0];
+    if (!sheetName) {
+      return err(res, 422, "Workbook has no sheets");
+    }
+
+    const ws = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+    if (!rows.length) {
+      return err(res, 422, "No data rows in spreadsheet (header row required)");
+    }
+
+    const created = [];
+    const failed = [];
+    const seenMobile = new Set();
+    const seenEmail = new Set();
+
+    for (let i = 0; i < rows.length; i += 1) {
+      const rowIndex = i + 2;
+      const r = normalizeSheetRow(rows[i]);
+
+      const name = r.name || r.full_name || "";
+      const email = r.email ? String(r.email).toLowerCase().trim() : "";
+      let mobile = r.mobile != null && r.mobile !== "" ? String(r.mobile).trim() : "";
+      const gender = r.gender ? String(r.gender).trim() : "";
+      const countryRaw = r.country;
+      const rowPassword = r.password ? String(r.password).trim() : "";
+
+      const password = rowPassword || defaultPassword;
+
+      if (!name) {
+        failed.push({ row: rowIndex, reason: "name is required", mobile: mobile || null, email: email || null });
+        continue;
+      }
+      if (!mobile) {
+        failed.push({ row: rowIndex, reason: "mobile is required", email: email || null });
+        continue;
+      }
+      if (!password) {
+        failed.push({
+          row: rowIndex,
+          reason: "password is required (column Password or form field default_password)",
+          mobile,
+          email: email || null,
+        });
+        continue;
+      }
+
+      if (seenMobile.has(mobile)) {
+        failed.push({ row: rowIndex, reason: "duplicate mobile in file", mobile, email: email || null });
+        continue;
+      }
+      if (email && seenEmail.has(email)) {
+        failed.push({ row: rowIndex, reason: "duplicate email in file", mobile, email });
+        continue;
+      }
+      seenMobile.add(mobile);
+      if (email) seenEmail.add(email);
+
+      if (email) {
+        const existsEmail = await User.findOne({ email }).lean();
+        if (existsEmail) {
+          failed.push({ row: rowIndex, reason: "email already registered", mobile, email });
+          continue;
+        }
+      }
+      const existsMobile = await User.findOne({ mobile }).lean();
+      if (existsMobile) {
+        failed.push({ row: rowIndex, reason: "mobile already registered", mobile, email: email || null });
+        continue;
+      }
+
+      let countryId;
+      if (countryRaw !== undefined && countryRaw !== null && String(countryRaw).trim() !== "") {
+        const resolved = await resolveCountryId(countryRaw);
+        if (resolved === null) {
+          failed.push({
+            row: rowIndex,
+            reason: `country could not be resolved (${String(countryRaw).trim()}). Use MongoDB id, 2-letter code, dial code, or exact country name.`,
+            mobile,
+            email: email || null,
+          });
+          continue;
+        }
+        countryId = resolved;
+      }
+
+      try {
+        const hashed = await bcrypt.hash(password, 10);
+        const doc = await User.create({
+          name: String(name).trim(),
+          country: countryId,
+          mobile,
+          email: email || undefined,
+          gender: gender || undefined,
+          password: hashed,
+          role: "user",
+          active: true,
+          refferal_code: randomReferral(6),
+          mobile_confirmed: true,
+        });
+
+        await attachRole(doc._id, "user");
+        await UserWallet.create({ user_id: doc._id, amount_added: 0, amount_balance: 0 });
+
+        created.push({
+          row: rowIndex,
+          user_id: doc._id,
+          name: doc.name,
+          email: doc.email || null,
+          mobile: doc.mobile,
+        });
+      } catch (rowErr) {
+        failed.push({
+          row: rowIndex,
+          reason: rowErr.message || "create failed",
+          mobile,
+          email: email || null,
+        });
+      }
+    }
+
+    return ok(res, {
+      sheet: sheetName,
+      created_count: created.length,
+      failed_count: failed.length,
+      created,
+      failed,
     });
   } catch (e) {
     next(e);
@@ -545,6 +746,7 @@ module.exports = {
   listUsers,
   getUser,
   createUser,
+  bulkUploadUsers,
   updateUser,
   deleteUser,
   getWallet,

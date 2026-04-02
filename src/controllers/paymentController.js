@@ -3,6 +3,7 @@ const CardInfo = require("../models/CardInfo");
 const UserWallet = require("../models/UserWallet");
 const UserWalletHistory = require("../models/UserWalletHistory");
 const WalletWithdrawalRequest = require("../models/WalletWithdrawalRequest");
+const Driver = require("../models/Driver");
 const PaymentRequest = require("../models/PaymentRequest");
 const PaymentGateway = require("../models/PaymentGateway");
 const ThirdPartySetting = require("../models/ThirdPartySetting");
@@ -98,16 +99,17 @@ async function requestForWithdrawal(req, res) {
     const userId = req.user?.id;
     const { requested_amount, requested_currency } = req.body || {};
     if (!requested_amount) return fail(res, "requested_amount is required", 422);
-    
-      await WalletWithdrawalRequest.create({
-        user_id: userId,
-        amount: Number(requested_amount),
-        requested_currency: requested_currency || null,
-        status: "requested",
-      });
-      return ok(res, null, "Withdrawal request submitted");
-    
 
+    const driver = await Driver.findOne({ user_id: userId }).select("_id").lean();
+
+    await WalletWithdrawalRequest.create({
+      user_id: userId,
+      driver_id: driver ? driver._id : null,
+      amount: Number(requested_amount),
+      requested_currency: requested_currency || null,
+      status: "requested",
+    });
+    return ok(res, null, "Withdrawal request submitted");
   } catch {
     return fail(res);
   }

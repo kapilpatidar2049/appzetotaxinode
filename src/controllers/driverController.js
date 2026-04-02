@@ -4,6 +4,7 @@ const DriverNeededDocument = require("../models/DriverNeededDocument");
 const DriverWallet = require("../models/DriverWallet");
 const DriverWalletHistory = require("../models/DriverWalletHistory");
 const DriverSubscription = require("../models/DriverSubscription");
+const DriverSubscriptionPlan = require("../models/DriverSubscriptionPlan");
 const DriverIncentiveHistory = require("../models/DriverIncentiveHistory");
 const DriverLevelUp = require("../models/DriverLevelUp");
 const RewardHistory = require("../models/RewardHistory");
@@ -463,7 +464,10 @@ async function invoiceHistory(req, res) {
 // SubscriptionController equivalents
 async function listOfPlans(req, res) {
   try {
-    return ok(res, []);
+    const rows = await DriverSubscriptionPlan.find({ active: true })
+      .sort({ createdAt: -1 })
+      .lean();
+    return ok(res, rows);
   } catch {
     return fail(res);
   }
@@ -476,12 +480,22 @@ async function subscribe(req, res) {
     if (!driver) return fail(res, "Driver not found", 404);
     const { subscription_detail_id } = req.body || {};
     if (!subscription_detail_id) return fail(res, "subscription_detail_id is required", 422);
+    if (!mongoose.Types.ObjectId.isValid(subscription_detail_id)) {
+      return fail(res, "Invalid subscription_detail_id", 422);
+    }
+    const plan = await DriverSubscriptionPlan.findById(subscription_detail_id).lean();
+    if (!plan || !plan.active) return fail(res, "Subscription plan not found", 404);
 
     
       await DriverSubscription.create({
         driver_id: driver._id || driver.id,
         subscription_detail_id,
         active: true,
+        starts_at: new Date(),
+        ends_at: new Date(
+          Date.now() + Number(plan.subscription_duration || 0) * 24 * 60 * 60 * 1000
+        ),
+        amount: Number(plan.amount || 0),
       });
       await Driver.updateOne(
         { _id: driver._id || driver.id },

@@ -13,6 +13,8 @@ router.post("/users/:user_id/deduct", adminWalletController.deductUserWalletAmou
 // Driver wallets
 router.get("/drivers", adminWalletController.listDriverWallets);
 router.get("/drivers/negative", adminWalletController.listNegativeDriverWallets);
+router.get("/drivers/withdrawals", adminWalletController.listDriversWithWithdrawals);
+router.get("/drivers/:driver_id/withdrawals", adminWalletController.listWithdrawalsForDriver);
 router.get("/drivers/:driver_id", adminWalletController.getDriverWallet);
 router.post("/drivers/:driver_id/adjust", adminWalletController.adjustDriverWallet);
 router.post("/drivers/:driver_id/add", adminWalletController.addDriverWalletAmount);
