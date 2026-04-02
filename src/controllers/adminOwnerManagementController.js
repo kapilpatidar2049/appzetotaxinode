@@ -10,6 +10,7 @@ const FleetNeededDocument = require("../models/FleetNeededDocument");
 const DriverNeededDocument = require("../models/DriverNeededDocument");
 const FleetDocument = require("../models/FleetDocument");
 const DriverDocument = require("../models/DriverDocument");
+const OwnerDocument = require("../models/OwnerDocument");
 const RequestRating = require("../models/RequestRating");
 const User = require("../models/User");
 const dash = require("../services/adminDashboardMongo");
@@ -939,6 +940,370 @@ async function getDriverRatingDetails(req, res, next) {
   }
 }
 
+async function listOwnerDocumentUploads(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const filter = {};
+    if (req.query.owner_id && mongoose.Types.ObjectId.isValid(req.query.owner_id)) {
+      filter.owner_id = req.query.owner_id;
+    }
+    const status = normalizeReviewStatus(req.query.status);
+    if (req.query.status && !status) {
+      return err(res, 422, "status must be pending, approved, or rejected");
+    }
+    if (status) filter.status = status;
+
+    const [items, total] = await Promise.all([
+      OwnerDocument.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("owner_id")
+        .populate("owner_needed_document_id", "name")
+        .lean(),
+      OwnerDocument.countDocuments(filter),
+    ]);
+
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function uploadOwnerDocument(req, res, next) {
+  try {
+    const body = req.body || {};
+    const { owner_id, owner_needed_document_id, document_name, document_path } = body;
+
+    if (!owner_id || !mongoose.Types.ObjectId.isValid(owner_id)) {
+      return err(res, 422, "Valid owner_id is required");
+    }
+    if (!owner_needed_document_id || !mongoose.Types.ObjectId.isValid(owner_needed_document_id)) {
+      return err(res, 422, "Valid owner_needed_document_id is required");
+    }
+    if (!document_path) return err(res, 422, "document_path is required");
+
+    const [owner, needed] = await Promise.all([
+      Owner.findById(owner_id).select("_id").lean(),
+      OwnerNeededDocument.findById(owner_needed_document_id).lean(),
+    ]);
+    if (!owner) return err(res, 404, "Owner not found");
+    if (!needed || !needed.active) return err(res, 404, "Owner needed document not found");
+
+    const doc = await OwnerDocument.findOneAndUpdate(
+      { owner_id, owner_needed_document_id },
+      {
+        $set: {
+          document_name: document_name || needed.name,
+          document_path,
+          status: "pending",
+          approve: false,
+          rejected_reason: null,
+          reviewed_at: null,
+        },
+      },
+      { upsert: true, new: true }
+    ).lean();
+
+    return ok(res, { owner_document: doc }, "Owner document uploaded");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function reviewOwnerDocumentUpload(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid owner document id");
+    const status = normalizeReviewStatus(req.body?.status);
+    if (!status || status === "pending") {
+      return err(res, 422, "status must be approved or rejected");
+    }
+    const rejectedReason = req.body?.rejected_reason;
+    if (status === "rejected" && !rejectedReason) {
+      return err(res, 422, "rejected_reason is required for rejected status");
+    }
+
+    const doc = await OwnerDocument.findById(id);
+    if (!doc) return err(res, 404, "Owner document upload not found");
+
+    doc.status = status;
+    doc.approve = status === "approved";
+    doc.rejected_reason = status === "rejected" ? rejectedReason : null;
+    doc.reviewed_at = new Date();
+    await doc.save();
+
+    return ok(res, { owner_document: doc.toObject() }, "Owner document reviewed");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function approveOwner(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid owner id");
+
+    const statusRaw = req.body?.status ?? req.body?.approve ?? req.body?.approved ?? null;
+    const statusNum = statusRaw === true ? 1 : statusRaw === false ? 0 : Number(statusRaw);
+    if (![0, 1].includes(statusNum)) {
+      return err(res, 422, "status must be 0 or 1");
+    }
+
+    const owner = await Owner.findById(id).lean();
+    if (!owner) return err(res, 404, "Owner not found");
+
+    if (statusNum === 0) {
+      await Owner.findByIdAndUpdate(id, { $set: { approve: false, active: false } }, { new: true });
+      // If owner is disapproved, also disapprove related fleets and fleet drivers.
+      await Fleet.updateMany({ owner_id: owner._id }, { $set: { approve: false, active: false } });
+      await Driver.updateMany(
+        { owner_id: owner._id, fleet_id: { $exists: true, $ne: null } },
+        { $set: { approve: false, active: false } }
+      );
+      return ok(res, { owner_id: id, approve: false }, "Owner disapproved");
+    }
+
+    // statusNum === 1 -> validate required docs for this owner.
+    const ownerId = owner._id;
+
+    const fleets = await Fleet.find({ owner_id: ownerId, active: true }).select("_id").lean();
+    if (!fleets.length) {
+      return err(res, 422, "Owner has no active fleets");
+    }
+
+    const fleetNeededDocs = await FleetNeededDocument.find({ active: true, is_required: true })
+      .select("_id")
+      .lean();
+    const fleetNeededDocIds = fleetNeededDocs.map((d) => d._id);
+
+    const ownerNeededDocs = await OwnerNeededDocument.find({ active: true, is_required: true })
+      .select("_id")
+      .lean();
+    const ownerNeededDocIds = ownerNeededDocs.map((d) => d._id);
+
+    const driverNeededDocs = await DriverNeededDocument.find({
+      active: true,
+      is_required: true,
+      $or: [
+        { document_for: "fleet" },
+        { document_for: "both" },
+        { account_type: "fleet" },
+        { account_type: "both" },
+      ],
+    })
+      .select("_id")
+      .lean();
+    const driverNeededDocIds = driverNeededDocs.map((d) => d._id);
+
+    // Validate owner document approvals.
+    const missingOwner = [];
+    if (ownerNeededDocIds.length) {
+      const approvedOwnerDocs = await OwnerDocument.find({
+        owner_id: ownerId,
+        owner_needed_document_id: { $in: ownerNeededDocIds },
+        status: "approved",
+      })
+        .select("owner_needed_document_id")
+        .lean();
+      const approvedSet = new Set(approvedOwnerDocs.map((d) => String(d.owner_needed_document_id)));
+      const missing = ownerNeededDocIds
+        .map((docId) => String(docId))
+        .filter((docId) => !approvedSet.has(docId));
+      if (missing.length) {
+        missingOwner.push({ owner_id: String(ownerId), missing_owner_needed_document_ids: missing });
+      }
+    }
+
+    // Validate fleet document approvals for each fleet.
+    const missingFleet = [];
+    if (fleetNeededDocIds.length) {
+      for (const f of fleets) {
+        const approvedFleetDocs = await FleetDocument.find({
+          fleet_id: f._id,
+          fleet_needed_document_id: { $in: fleetNeededDocIds },
+          status: "approved",
+        })
+          .select("fleet_needed_document_id")
+          .lean();
+
+        const approvedSet = new Set(approvedFleetDocs.map((d) => String(d.fleet_needed_document_id)));
+        const missing = fleetNeededDocIds
+          .map((docId) => String(docId))
+          .filter((docId) => !approvedSet.has(docId));
+
+        if (missing.length) {
+          missingFleet.push({ fleet_id: String(f._id), missing_fleet_needed_document_ids: missing });
+        }
+      }
+    }
+
+    // Validate driver document approvals for fleet drivers (drivers linked with fleet).
+    const drivers = await Driver.find({ owner_id: ownerId, fleet_id: { $exists: true, $ne: null }, active: true })
+      .select("_id")
+      .lean();
+
+    const missingDriver = [];
+    if (driverNeededDocIds.length && drivers.length) {
+      for (const d of drivers) {
+        const approvedDriverDocs = await DriverDocument.find({
+          driver_id: d._id,
+          driver_needed_document_id: { $in: driverNeededDocIds },
+          status: "approved",
+        })
+          .select("driver_needed_document_id")
+          .lean();
+
+        const approvedSet = new Set(approvedDriverDocs.map((x) => String(x.driver_needed_document_id)));
+        const missing = driverNeededDocIds
+          .map((docId) => String(docId))
+          .filter((docId) => !approvedSet.has(docId));
+
+        if (missing.length) {
+          missingDriver.push({ driver_id: String(d._id), missing_driver_needed_document_ids: missing });
+        }
+      }
+    }
+
+    if (missingOwner.length || missingFleet.length || missingDriver.length) {
+      return err(res, 422, "Required documents are not fully approved", {
+        missing_owner_docs: missingOwner,
+        missing_fleet_docs: missingFleet,
+        missing_driver_docs: missingDriver,
+      });
+    }
+
+    await Owner.findByIdAndUpdate(id, { $set: { approve: true, active: true } }, { new: true });
+    // If owner is approved, also approve related fleets and fleet drivers.
+    await Fleet.updateMany({ owner_id: ownerId }, { $set: { approve: true, active: true } });
+    await Driver.updateMany(
+      { owner_id: ownerId, fleet_id: { $exists: true, $ne: null } },
+      { $set: { approve: true, active: true } }
+    );
+    return ok(res, { owner_id: id, approve: true }, "Owner approved");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function approveFleet(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid fleet id");
+
+    const statusRaw = req.body?.status ?? req.body?.approve ?? req.body?.approved ?? null;
+    const statusNum = statusRaw === true ? 1 : statusRaw === false ? 0 : Number(statusRaw);
+    if (![0, 1].includes(statusNum)) return err(res, 422, "status must be 0 or 1");
+
+    const fleet = await Fleet.findById(id).lean();
+    if (!fleet) return err(res, 404, "Fleet not found");
+
+    if (statusNum === 0) {
+      await Fleet.findByIdAndUpdate(id, { $set: { approve: false, active: false } }, { new: true });
+      return ok(res, { fleet_id: id, approve: false }, "Fleet disapproved");
+    }
+
+    const neededDocs = await FleetNeededDocument.find({ active: true, is_required: true })
+      .select("_id")
+      .lean();
+    const neededIds = neededDocs.map((d) => d._id);
+
+    let missing = [];
+    if (neededIds.length) {
+      const approvedDocs = await FleetDocument.find({
+        fleet_id: id,
+        fleet_needed_document_id: { $in: neededIds },
+        status: "approved",
+      })
+        .select("fleet_needed_document_id")
+        .lean();
+
+      const approvedSet = new Set(approvedDocs.map((d) => String(d.fleet_needed_document_id)));
+      const missingIds = neededIds.map((docId) => String(docId)).filter((docId) => !approvedSet.has(docId));
+      if (missingIds.length) {
+        missing = [{ fleet_id: String(id), missing_fleet_needed_document_ids: missingIds }];
+      }
+    }
+
+    if (missing.length) {
+      return err(res, 422, "Required fleet documents are not fully approved", { missing_fleet_docs: missing });
+    }
+
+    await Fleet.findByIdAndUpdate(id, { $set: { approve: true, active: true } }, { new: true });
+    return ok(res, { fleet_id: id, approve: true }, "Fleet approved");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function approveDriver(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid driver id");
+
+    const statusRaw = req.body?.status ?? req.body?.approve ?? req.body?.approved ?? null;
+    const statusNum = statusRaw === true ? 1 : statusRaw === false ? 0 : Number(statusRaw);
+    if (![0, 1].includes(statusNum)) return err(res, 422, "status must be 0 or 1");
+
+    const driver = await Driver.findById(id).lean();
+    if (!driver) return err(res, 404, "Driver not found");
+
+    if (statusNum === 0) {
+      await Driver.findByIdAndUpdate(id, { $set: { approve: false, active: false } }, { new: true });
+      return ok(res, { driver_id: id, approve: false }, "Driver disapproved");
+    }
+
+    // Fleet-driver required docs (document_for: fleet|both or account_type: fleet|both)
+    const neededDocs = await DriverNeededDocument.find({
+      active: true,
+      is_required: true,
+      $or: [
+        { document_for: "fleet" },
+        { document_for: "both" },
+        { account_type: "fleet" },
+        { account_type: "both" },
+      ],
+    })
+      .select("_id")
+      .lean();
+    const neededIds = neededDocs.map((d) => d._id);
+
+    let missing = [];
+    if (neededIds.length) {
+      const approvedDocs = await DriverDocument.find({
+        driver_id: id,
+        driver_needed_document_id: { $in: neededIds },
+        status: "approved",
+      })
+        .select("driver_needed_document_id")
+        .lean();
+
+      const approvedSet = new Set(approvedDocs.map((d) => String(d.driver_needed_document_id)));
+      const missingIds = neededIds.map((docId) => String(docId)).filter((docId) => !approvedSet.has(docId));
+      if (missingIds.length) {
+        missing = [{ driver_id: String(id), missing_driver_needed_document_ids: missingIds }];
+      }
+    }
+
+    if (missing.length) {
+      return err(res, 422, "Required driver documents are not fully approved", { missing_driver_docs: missing });
+    }
+
+    await Driver.findByIdAndUpdate(id, { $set: { approve: true, active: true } }, { new: true });
+    return ok(res, { driver_id: id, approve: true }, "Driver approved");
+  } catch (e) {
+    next(e);
+  }
+}
+
 module.exports = {
   dashboard,
   listManageOwners: adminOwnerController.listOwners,
@@ -979,8 +1344,14 @@ module.exports = {
   deleteDriverNeededDocument: driverDocCrud.remove,
   listFleetDocumentUploads,
   reviewFleetDocumentUpload,
+  listOwnerDocumentUploads,
+  uploadOwnerDocument,
+  reviewOwnerDocumentUpload,
   listDriverDocumentUploads,
   reviewDriverDocumentUpload,
   listDriverRatings,
   getDriverRatingDetails,
+  approveOwner,
+  approveFleet,
+  approveDriver,
 };

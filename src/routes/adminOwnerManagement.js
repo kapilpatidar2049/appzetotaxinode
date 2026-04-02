@@ -11,6 +11,8 @@ router.post("/manage-owners", c.createManageOwner);
 router.get("/manage-owners/:id", c.getManageOwner);
 router.patch("/manage-owners/:id", c.updateManageOwner);
 router.delete("/manage-owners/:id", c.deleteManageOwner);
+// Approve owner based on required fleet/driver document approvals
+router.patch("/manage-owners/:id/approve", c.approveOwner);
 
 // Owner Wallet CRUD + adjustment
 router.get("/owner-wallet", c.listOwnerWallets);
@@ -62,10 +64,17 @@ router.patch("/driver-needed-document/:id", c.updateDriverNeededDocument);
 router.delete("/driver-needed-document/:id", c.deleteDriverNeededDocument);
 
 // Uploaded fleet/driver documents review by admin
+router.get("/owner-documents", c.listOwnerDocumentUploads);
+router.post("/owner-documents", c.uploadOwnerDocument);
+router.patch("/owner-documents/:id/review", c.reviewOwnerDocumentUpload);
 router.get("/fleet-documents", c.listFleetDocumentUploads);
 router.patch("/fleet-documents/:id/review", c.reviewFleetDocumentUpload);
 router.get("/driver-documents", c.listDriverDocumentUploads);
 router.patch("/driver-documents/:id/review", c.reviewDriverDocumentUpload);
+
+// Approve/reject fleet + driver based on required document approvals
+router.patch("/fleet-management/:id/approve", c.approveFleet);
+router.patch("/drivers/:id/approve", c.approveDriver);
 
 // Driver ratings
 router.get("/driver-ratings", c.listDriverRatings);
