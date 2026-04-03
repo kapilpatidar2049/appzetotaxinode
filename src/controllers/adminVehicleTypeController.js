@@ -4,6 +4,9 @@ const SubVehicleType = require("../models/SubVehicleType");
 const RentalPackage = require("../models/RentalPackage");
 const SetPrice = require("../models/SetPrice");
 const RentalPackagePrice = require("../models/RentalPackagePrice");
+const DriverRewardSetting = require("../models/DriverRewardSetting");
+const DriverIncentiveSetting = require("../models/DriverIncentiveSetting");
+const DriverSurgeSetting = require("../models/DriverSurgeSetting");
 
 function ok(res, data, message = "success") {
   return res.json({ success: true, message, data });
@@ -25,6 +28,46 @@ function parsePage(req) {
 
 function toNumber(v) {
   return v == null || v === "" ? undefined : Number(v);
+}
+
+function toBool(v, fallback = false) {
+  if (v === undefined || v === null || v === "") return fallback;
+  if (typeof v === "boolean") return v;
+  const s = String(v).toLowerCase();
+  return ["1", "true", "yes", "on"].includes(s);
+}
+
+function normalizeIncentiveRules(list = [], fallbackZoneTypeId = "") {
+  if (!Array.isArray(list)) return [];
+  return list.map((r, i) => ({
+    index: r.index != null ? Number(r.index) : i + 1,
+    ride_count: Number(r.ride_count || 0),
+    amount: Number(r.amount || 0),
+    zone_type_id: String(r.zone_type_id || fallbackZoneTypeId || ""),
+  }));
+}
+
+function normalizeSurgeSlots(list = []) {
+  if (!Array.isArray(list)) return [];
+  return list.map((s, i) => ({
+    index: s.index != null ? Number(s.index) : i + 1,
+    start_time: String(s.start_time || ""),
+    end_time: String(s.end_time || ""),
+    value: Number(s.value || 0),
+  }));
+}
+
+function normalizeSurgeWeek(surge = {}) {
+  const src = surge && typeof surge === "object" ? surge : {};
+  return {
+    Sunday: normalizeSurgeSlots(src.Sunday || []),
+    Monday: normalizeSurgeSlots(src.Monday || []),
+    Tuesday: normalizeSurgeSlots(src.Tuesday || []),
+    Wednesday: normalizeSurgeSlots(src.Wednesday || []),
+    Thursday: normalizeSurgeSlots(src.Thursday || []),
+    Friday: normalizeSurgeSlots(src.Friday || []),
+    Saturday: normalizeSurgeSlots(src.Saturday || []),
+  };
 }
 
 async function listVehicleTypes(req, res, next) {
@@ -825,6 +868,352 @@ async function deleteRentalPackagePrice(req, res, next) {
   }
 }
 
+async function listDriverRewards(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const { zone_type_id, active } = req.query;
+    const filter = {};
+    if (zone_type_id) filter.zone_type_id = String(zone_type_id);
+    if (active === "1" || active === "true") filter.active = true;
+    if (active === "0" || active === "false") filter.active = false;
+
+    const [items, total] = await Promise.all([
+      DriverRewardSetting.find(filter).sort({ level: 1, createdAt: -1 }).skip(skip).limit(limit).lean(),
+      DriverRewardSetting.countDocuments(filter),
+    ]);
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getDriverReward(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverRewardSetting.findById(id).lean();
+    if (!doc) return err(res, 404, "Driver reward not found");
+    return ok(res, { driver_reward: doc });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function createDriverReward(req, res, next) {
+  try {
+    const body = req.body || {};
+    const errors = {};
+    if (!body.name) errors.name = "name is required";
+    if (!body.level && body.level !== 0) errors.level = "level is required";
+    if (!body.zone_type_id) errors.zone_type_id = "zone_type_id is required";
+    if (!body.reward_type) errors.reward_type = "reward_type is required";
+    if (!body.reward && body.reward !== 0) errors.reward = "reward is required";
+    if (Object.keys(errors).length) return err(res, 422, "Validation failed", errors);
+
+    const image = req.file ? `/uploads/driver-rewards/${req.file.filename}` : body.image || null;
+
+    const doc = await DriverRewardSetting.create({
+      name: String(body.name).trim(),
+      is_min_ride_complete: toBool(body.is_min_ride_complete, false),
+      is_min_ride_amount_complete: toBool(body.is_min_ride_amount_complete, false),
+      level: Number(body.level),
+      reward_type: String(body.reward_type),
+      reward: Number(body.reward),
+      min_ride_amount: toNumber(body.min_ride_amount) || 0,
+      min_ride_count: toNumber(body.min_ride_count) || 0,
+      ride_points: toNumber(body.ride_points) || 0,
+      amount_points: toNumber(body.amount_points) || 0,
+      zone_type_id: String(body.zone_type_id),
+      image,
+      active: body.active !== undefined ? toBool(body.active, true) : true,
+    });
+    return res.status(201).json({ success: true, message: "Created", driver_reward: doc.toObject() });
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Driver reward already exists for this zone_type_id + level",
+      });
+    }
+    next(e);
+  }
+}
+
+async function updateDriverReward(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverRewardSetting.findById(id);
+    if (!doc) return err(res, 404, "Driver reward not found");
+
+    const body = req.body || {};
+    if (body.name !== undefined) doc.name = String(body.name).trim();
+    if (body.is_min_ride_complete !== undefined) {
+      doc.is_min_ride_complete = toBool(body.is_min_ride_complete, false);
+    }
+    if (body.is_min_ride_amount_complete !== undefined) {
+      doc.is_min_ride_amount_complete = toBool(body.is_min_ride_amount_complete, false);
+    }
+    if (body.level !== undefined) doc.level = Number(body.level);
+    if (body.reward_type !== undefined) doc.reward_type = String(body.reward_type);
+    if (body.reward !== undefined) doc.reward = Number(body.reward);
+    if (body.min_ride_amount !== undefined) doc.min_ride_amount = toNumber(body.min_ride_amount) || 0;
+    if (body.min_ride_count !== undefined) doc.min_ride_count = toNumber(body.min_ride_count) || 0;
+    if (body.ride_points !== undefined) doc.ride_points = toNumber(body.ride_points) || 0;
+    if (body.amount_points !== undefined) doc.amount_points = toNumber(body.amount_points) || 0;
+    if (body.zone_type_id !== undefined) doc.zone_type_id = String(body.zone_type_id);
+    if (body.active !== undefined) doc.active = toBool(body.active, true);
+    if (body.image !== undefined) doc.image = body.image || null;
+    if (req.file) doc.image = `/uploads/driver-rewards/${req.file.filename}`;
+
+    await doc.save();
+    return ok(res, { driver_reward: doc.toObject() }, "Updated");
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Driver reward already exists for this zone_type_id + level",
+      });
+    }
+    next(e);
+  }
+}
+
+async function deleteDriverReward(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverRewardSetting.findByIdAndDelete(id);
+    if (!doc) return err(res, 404, "Driver reward not found");
+    return ok(res, { id }, "Deleted");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function listDriverIncentives(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const { zone_type_id, active } = req.query;
+    const filter = {};
+    if (zone_type_id) filter.zone_type_id = String(zone_type_id);
+    if (active === "1" || active === "true") filter.active = true;
+    if (active === "0" || active === "false") filter.active = false;
+
+    const [items, total] = await Promise.all([
+      DriverIncentiveSetting.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      DriverIncentiveSetting.countDocuments(filter),
+    ]);
+
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getDriverIncentive(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverIncentiveSetting.findById(id).lean();
+    if (!doc) return err(res, 404, "Driver incentive not found");
+    return ok(res, { driver_incentive: doc });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function createDriverIncentive(req, res, next) {
+  try {
+    const body = req.body || {};
+    const zoneTypeId = String(body.zone_type_id || "");
+    if (!zoneTypeId) return err(res, 422, "zone_type_id is required");
+
+    const daily = normalizeIncentiveRules(body.Daily || body.daily || [], zoneTypeId);
+    const weekly = normalizeIncentiveRules(body.Weekly || body.weekly || [], zoneTypeId);
+
+    const doc = await DriverIncentiveSetting.create({
+      zone_type_id: zoneTypeId,
+      Daily: daily,
+      Weekly: weekly,
+      active: body.active !== undefined ? toBool(body.active, true) : true,
+    });
+
+    return res
+      .status(201)
+      .json({ success: true, message: "Created", driver_incentive: doc.toObject() });
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Driver incentive already exists for this zone_type_id",
+      });
+    }
+    next(e);
+  }
+}
+
+async function updateDriverIncentive(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverIncentiveSetting.findById(id);
+    if (!doc) return err(res, 404, "Driver incentive not found");
+
+    const body = req.body || {};
+    if (body.zone_type_id !== undefined) doc.zone_type_id = String(body.zone_type_id || "");
+    if (body.Daily !== undefined || body.daily !== undefined) {
+      doc.Daily = normalizeIncentiveRules(body.Daily || body.daily || [], doc.zone_type_id);
+    }
+    if (body.Weekly !== undefined || body.weekly !== undefined) {
+      doc.Weekly = normalizeIncentiveRules(body.Weekly || body.weekly || [], doc.zone_type_id);
+    }
+    if (body.active !== undefined) doc.active = toBool(body.active, true);
+
+    await doc.save();
+    return ok(res, { driver_incentive: doc.toObject() }, "Updated");
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Driver incentive already exists for this zone_type_id",
+      });
+    }
+    next(e);
+  }
+}
+
+async function deleteDriverIncentive(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverIncentiveSetting.findByIdAndDelete(id);
+    if (!doc) return err(res, 404, "Driver incentive not found");
+    return ok(res, { id }, "Deleted");
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function listDriverSurges(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const { zone_type_id, active } = req.query;
+    const filter = {};
+    if (zone_type_id) filter.zone_type_id = String(zone_type_id);
+    if (active === "1" || active === "true") filter.active = true;
+    if (active === "0" || active === "false") filter.active = false;
+
+    const [items, total] = await Promise.all([
+      DriverSurgeSetting.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      DriverSurgeSetting.countDocuments(filter),
+    ]);
+
+    return ok(res, {
+      results: items,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getDriverSurge(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverSurgeSetting.findById(id).lean();
+    if (!doc) return err(res, 404, "Driver surge not found");
+    return ok(res, { driver_surge: doc });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function createDriverSurge(req, res, next) {
+  try {
+    const body = req.body || {};
+    const zoneTypeId = String(body.zone_type_id || "");
+    if (!zoneTypeId) return err(res, 422, "zone_type_id is required");
+    if (!body.surge || typeof body.surge !== "object") {
+      return err(res, 422, "surge object is required");
+    }
+
+    const doc = await DriverSurgeSetting.create({
+      zone_type_id: zoneTypeId,
+      surge: normalizeSurgeWeek(body.surge),
+      active: body.active !== undefined ? toBool(body.active, true) : true,
+    });
+
+    return res.status(201).json({ success: true, message: "Created", driver_surge: doc.toObject() });
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Driver surge already exists for this zone_type_id",
+      });
+    }
+    next(e);
+  }
+}
+
+async function updateDriverSurge(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverSurgeSetting.findById(id);
+    if (!doc) return err(res, 404, "Driver surge not found");
+
+    const body = req.body || {};
+    if (body.zone_type_id !== undefined) doc.zone_type_id = String(body.zone_type_id || "");
+    if (body.surge !== undefined) {
+      if (!body.surge || typeof body.surge !== "object") {
+        return err(res, 422, "surge must be an object");
+      }
+      doc.surge = normalizeSurgeWeek(body.surge);
+    }
+    if (body.active !== undefined) doc.active = toBool(body.active, true);
+
+    await doc.save();
+    return ok(res, { driver_surge: doc.toObject() }, "Updated");
+  } catch (e) {
+    if (e && e.code === 11000) {
+      return err(res, 422, "Validation failed", {
+        duplicate: "Driver surge already exists for this zone_type_id",
+      });
+    }
+    next(e);
+  }
+}
+
+async function deleteDriverSurge(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid id");
+    const doc = await DriverSurgeSetting.findByIdAndDelete(id);
+    if (!doc) return err(res, 404, "Driver surge not found");
+    return ok(res, { id }, "Deleted");
+  } catch (e) {
+    next(e);
+  }
+}
+
 module.exports = {
   listVehicleTypes,
   getVehicleType,
@@ -851,5 +1240,20 @@ module.exports = {
   createRentalPackagePrice,
   updateRentalPackagePrice,
   deleteRentalPackagePrice,
+  listDriverRewards,
+  getDriverReward,
+  createDriverReward,
+  updateDriverReward,
+  deleteDriverReward,
+  listDriverIncentives,
+  getDriverIncentive,
+  createDriverIncentive,
+  updateDriverIncentive,
+  deleteDriverIncentive,
+  listDriverSurges,
+  getDriverSurge,
+  createDriverSurge,
+  updateDriverSurge,
+  deleteDriverSurge,
 };
 

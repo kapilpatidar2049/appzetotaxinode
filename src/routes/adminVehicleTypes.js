@@ -1,5 +1,6 @@
 const express = require("express");
 const adminVehicleTypeController = require("../controllers/adminVehicleTypeController");
+const { uploadDriverRewardImage, uploadImageError } = require("../middleware/uploadImage");
 
 const router = express.Router();
 
@@ -32,6 +33,34 @@ router.post("/rental-package-prices", adminVehicleTypeController.createRentalPac
 router.get("/rental-package-prices/:id", adminVehicleTypeController.getRentalPackagePrice);
 router.patch("/rental-package-prices/:id", adminVehicleTypeController.updateRentalPackagePrice);
 router.delete("/rental-package-prices/:id", adminVehicleTypeController.deleteRentalPackagePrice);
+
+router.get("/driver-rewards", adminVehicleTypeController.listDriverRewards);
+router.post(
+  "/driver-rewards",
+  uploadDriverRewardImage.single("image"),
+  uploadImageError,
+  adminVehicleTypeController.createDriverReward
+);
+router.get("/driver-rewards/:id", adminVehicleTypeController.getDriverReward);
+router.patch(
+  "/driver-rewards/:id",
+  uploadDriverRewardImage.single("image"),
+  uploadImageError,
+  adminVehicleTypeController.updateDriverReward
+);
+router.delete("/driver-rewards/:id", adminVehicleTypeController.deleteDriverReward);
+
+router.get("/driver-incentives", adminVehicleTypeController.listDriverIncentives);
+router.post("/driver-incentives", adminVehicleTypeController.createDriverIncentive);
+router.get("/driver-incentives/:id", adminVehicleTypeController.getDriverIncentive);
+router.patch("/driver-incentives/:id", adminVehicleTypeController.updateDriverIncentive);
+router.delete("/driver-incentives/:id", adminVehicleTypeController.deleteDriverIncentive);
+
+router.get("/driver-surges", adminVehicleTypeController.listDriverSurges);
+router.post("/driver-surges", adminVehicleTypeController.createDriverSurge);
+router.get("/driver-surges/:id", adminVehicleTypeController.getDriverSurge);
+router.patch("/driver-surges/:id", adminVehicleTypeController.updateDriverSurge);
+router.delete("/driver-surges/:id", adminVehicleTypeController.deleteDriverSurge);
 
 module.exports = router;
 

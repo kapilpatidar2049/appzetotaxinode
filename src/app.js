@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 const config = require("./config");
 const {
   authRoutes,
@@ -29,6 +30,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: config.jsonBodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: config.jsonBodyLimit }));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 if (config.nodeEnv === "development") {
   app.use(morgan("dev"));

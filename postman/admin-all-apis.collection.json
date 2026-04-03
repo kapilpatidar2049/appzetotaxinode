@@ -359,6 +359,75 @@
       ]
     },
     {
+      "name": "Notifications",
+      "item": [
+        { "name": "List Notifications", "request": { "method": "GET", "url": "{{baseUrl}}/notifications" } },
+        {
+          "name": "Create Notification (multipart + image)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/notifications",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "service_location_id", "value": "69cd1e0fc3a56962349acf08", "type": "text" },
+                { "key": "send_to", "value": "drivers", "type": "text" },
+                { "key": "push_title", "value": "Delivery Alert", "type": "text" },
+                { "key": "message", "value": "New order zone is now active.", "type": "text" },
+                { "key": "banner_image", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        { "name": "Get Notification", "request": { "method": "GET", "url": "{{baseUrl}}/notifications/{{id}}" } },
+        {
+          "name": "Update Notification (multipart + optional image)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/notifications/{{id}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "send_to", "value": "all", "type": "text" },
+                { "key": "push_title", "value": "Updated Title", "type": "text" },
+                { "key": "message", "value": "Updated message body", "type": "text" },
+                { "key": "banner_image", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        { "name": "Delete Notification", "request": { "method": "DELETE", "url": "{{baseUrl}}/notifications/{{id}}" } },
+        {
+          "name": "Send Notification (existing notification_id)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/notifications/send",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification_id\": \"{{id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Send Notification (direct multipart + image)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/notifications/send",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "service_location_id", "value": "69cd1e0fc3a56962349acf08", "type": "text" },
+                { "key": "send_to", "value": "users", "type": "text" },
+                { "key": "push_title", "value": "Promo Alert", "type": "text" },
+                { "key": "message", "value": "Special offer for you!", "type": "text" },
+                { "key": "banner_image", "type": "file", "src": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Admin Dashboard JSON",
       "item": [
         { "name": "Dashboard Page", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/page" } },

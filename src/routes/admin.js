@@ -40,6 +40,7 @@ adminRoutes.use("/rewards", require("./adminRewards"));
 adminRoutes.use("/common", require("./adminCommonContent"));
 adminRoutes.use("/support-tickets", require("./adminSupportTickets"));
 adminRoutes.use("/reports", require("./adminReports"));
+adminRoutes.use("/notifications", require("./adminNotifications"));
 adminRoutes.use("/general-settings", require("./adminGeneralSettings"));
 
 /** Laravel web.php auth JSON + Inertia page props as JSON (dashboard widgets). */

@@ -106,7 +106,7 @@ function rtdbNow() {
   return admin.database.ServerValue.TIMESTAMP;
 }
 
-async function sendFcmNotification(token, title, body) {
+async function sendFcmNotification(token, title, body, options = {}) {
   if (!token) return false;
   const admin = tryLoadAdmin();
   if (!admin) {
@@ -118,9 +118,16 @@ async function sendFcmNotification(token, title, body) {
     return false;
   }
   try {
+    const data =
+      options && options.data && typeof options.data === "object"
+        ? Object.fromEntries(
+            Object.entries(options.data).map(([k, v]) => [String(k), v == null ? "" : String(v)])
+          )
+        : undefined;
     await admin.messaging().send({
       token,
       notification: { title, body },
+      ...(data ? { data } : {}),
     });
     return true;
   } catch (err) {
