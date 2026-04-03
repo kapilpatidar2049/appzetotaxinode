@@ -28,6 +28,7 @@ adminRoutes.use("/service-locations", require("./adminServiceLocations"));
 adminRoutes.use("/service_locations", require("./adminServiceLocations"));
 adminRoutes.use("/banners", require("./adminBanners"));
 adminRoutes.use("/zones", require("./adminZones"));
+adminRoutes.use("/airports", require("./adminAirports"));
 adminRoutes.use("/types", require("./adminVehicleTypes"));
 adminRoutes.use("/goods-types", require("./adminGoodsTypes"));
 adminRoutes.use("/wallet", require("./adminWallet"));
