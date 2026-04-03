@@ -28,6 +28,8 @@ function createImageUploader(subdir, prefix) {
 
 const uploadNotificationImage = createImageUploader("notifications", "notification");
 const uploadDriverRewardImage = createImageUploader("driver-rewards", "driver-reward");
+const uploadAppModuleIcon = createImageUploader("app-modules", "app-module");
+const uploadPreferenceIcon = createImageUploader("preferences", "preference");
 
 const uploadImage = multer({
   storage: multer.memoryStorage(),
@@ -50,5 +52,7 @@ module.exports = {
   uploadImage,
   uploadNotificationImage,
   uploadDriverRewardImage,
+  uploadAppModuleIcon,
+  uploadPreferenceIcon,
   uploadImageError,
 };

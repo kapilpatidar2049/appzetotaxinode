@@ -313,6 +313,91 @@ async function listRequests(req, res, next) {
   }
 }
 
+async function listRequestsByPreset(req, res, next, preset) {
+  try {
+    const { page, limit, skip } = parsePage(req);
+    const filter = {};
+    if (preset === "trip") filter.transport_type = "taxi";
+    if (preset === "delivery") filter.transport_type = "delivery";
+    if (preset === "ongoing") {
+      filter.is_completed = false;
+      filter.is_cancelled = false;
+    }
+
+    const [items, total] = await Promise.all([
+      Request.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Request.countDocuments(filter),
+    ]);
+    const results = await buildDetailedRequestObjects(items);
+    return ok(res, {
+      results,
+      paginator: {
+        total,
+        per_page: limit,
+        current_page: page,
+        last_page: Math.ceil(total / limit) || 1,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function getRequestByPreset(req, res, next, preset) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) return err(res, 400, "Invalid request id");
+    const requestDoc = await Request.findById(id).lean();
+    if (!requestDoc) return err(res, 404, "Request not found");
+
+    if (preset === "trip" && String(requestDoc.transport_type || "").toLowerCase() !== "taxi") {
+      return err(res, 404, "Trip request not found");
+    }
+    if (
+      preset === "delivery" &&
+      String(requestDoc.transport_type || "").toLowerCase() !== "delivery"
+    ) {
+      return err(res, 404, "Delivery request not found");
+    }
+    if (preset === "ongoing" && (requestDoc.is_completed || requestDoc.is_cancelled)) {
+      return err(res, 404, "Ongoing request not found");
+    }
+
+    const [detailed] = await buildDetailedRequestObjects([requestDoc]);
+    return ok(res, detailed);
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function listTripRequests(req, res, next) {
+  return listRequestsByPreset(req, res, next, "trip");
+}
+
+async function getTripRequest(req, res, next) {
+  return getRequestByPreset(req, res, next, "trip");
+}
+
+async function listDeliveryRequests(req, res, next) {
+  return listRequestsByPreset(req, res, next, "delivery");
+}
+
+async function getDeliveryRequest(req, res, next) {
+  return getRequestByPreset(req, res, next, "delivery");
+}
+
+async function listOngoingRequests(req, res, next) {
+  return listRequestsByPreset(req, res, next, "ongoing");
+}
+
+async function getOngoingRequest(req, res, next) {
+  return getRequestByPreset(req, res, next, "ongoing");
+}
+
 async function getRequest(req, res, next) {
   try {
     const { id } = req.params;
@@ -434,6 +519,12 @@ async function cancelRequest(req, res, next) {
 
 module.exports = {
   listRequests,
+  listTripRequests,
+  getTripRequest,
+  listDeliveryRequests,
+  getDeliveryRequest,
+  listOngoingRequests,
+  getOngoingRequest,
   getRequest,
   assignDriver,
   cancelRequest,

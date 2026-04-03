@@ -29,6 +29,7 @@ adminRoutes.use("/service_locations", require("./adminServiceLocations"));
 adminRoutes.use("/banners", require("./adminBanners"));
 adminRoutes.use("/zones", require("./adminZones"));
 adminRoutes.use("/airports", require("./adminAirports"));
+adminRoutes.use("/countries", require("./adminCountries"));
 adminRoutes.use("/types", require("./adminVehicleTypes"));
 adminRoutes.use("/goods-types", require("./adminGoodsTypes"));
 adminRoutes.use("/wallet", require("./adminWallet"));
@@ -43,6 +44,10 @@ adminRoutes.use("/support-tickets", require("./adminSupportTickets"));
 adminRoutes.use("/reports", require("./adminReports"));
 adminRoutes.use("/notifications", require("./adminNotifications"));
 adminRoutes.use("/general-settings", require("./adminGeneralSettings"));
+adminRoutes.use("/languages", require("./adminLanguages"));
+adminRoutes.use("/preferences", require("./adminPreferences"));
+adminRoutes.use("/roles", require("./adminRoles"));
+adminRoutes.use("/permissions", require("./adminPermissions"));
 
 /** Laravel web.php auth JSON + Inertia page props as JSON (dashboard widgets). */
 adminRoutes.use(require("./adminInertiaJson"));

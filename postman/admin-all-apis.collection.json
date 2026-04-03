@@ -130,6 +130,229 @@
       ]
     },
     {
+      "name": "Countries",
+      "item": [
+        {
+          "name": "List Countries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/countries?page=1&limit=20&search=&active="
+          }
+        },
+        {
+          "name": "Create Country",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"IN\",\n  \"name\": \"India\",\n  \"dial_code\": \"+91\",\n  \"flag\": \"🇮🇳\",\n  \"currency_name\": \"Indian Rupee\",\n  \"currency_symbol\": \"₹\",\n  \"currency_code\": \"INR\",\n  \"active\": true\n}"
+            },
+            "url": "{{baseUrl}}/countries"
+          }
+        },
+        { "name": "Get Country", "request": { "method": "GET", "url": "{{baseUrl}}/countries/{{id}}" } },
+        {
+          "name": "Update Country",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"India\",\n  \"dial_code\": \"+91\",\n  \"active\": true\n}"
+            },
+            "url": "{{baseUrl}}/countries/{{id}}"
+          }
+        },
+        { "name": "Delete Country", "request": { "method": "DELETE", "url": "{{baseUrl}}/countries/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Languages",
+      "item": [
+        {
+          "name": "List Languages",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/languages?page=1&limit=10&search=&active="
+          }
+        },
+        {
+          "name": "Create Language (code hi,Hindi)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"hi,Hindi\",\n  \"direction\": \"ltr\"\n}"
+            },
+            "url": "{{baseUrl}}/languages"
+          }
+        },
+        { "name": "Get Language", "request": { "method": "GET", "url": "{{baseUrl}}/languages/{{id}}" } },
+        {
+          "name": "Update Language",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"hi\",\n  \"name\": \"Hindi\",\n  \"direction\": \"ltr\",\n  \"active\": 1,\n  \"default_status\": 0\n}"
+            },
+            "url": "{{baseUrl}}/languages/{{id}}"
+          }
+        },
+        {
+          "name": "Update Language Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": 1,\n  \"default_status\": 0\n}"
+            },
+            "url": "{{baseUrl}}/languages/{{id}}/status"
+          }
+        },
+        { "name": "Delete Language", "request": { "method": "DELETE", "url": "{{baseUrl}}/languages/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Preferences (master)",
+      "item": [
+        {
+          "name": "List Preferences",
+          "request": { "method": "GET", "url": "{{baseUrl}}/preferences?page=1&limit=20&search=&active=" }
+        },
+        {
+          "name": "Create Preference (multipart name + icon)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/preferences",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "pet", "type": "text" },
+                { "key": "active", "value": "true", "type": "text" },
+                { "key": "order", "value": "0", "type": "text" },
+                { "key": "icon", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        { "name": "Get Preference", "request": { "method": "GET", "url": "{{baseUrl}}/preferences/{{id}}" } },
+        {
+          "name": "Update Preference (optional new icon)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/preferences/{{id}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "pet", "type": "text" },
+                { "key": "active", "value": "true", "type": "text" },
+                { "key": "icon", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Preference Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"active\": 1\n}" },
+            "url": "{{baseUrl}}/preferences/{{id}}/status"
+          }
+        },
+        { "name": "Delete Preference", "request": { "method": "DELETE", "url": "{{baseUrl}}/preferences/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Roles & RBAC",
+      "item": [
+        { "name": "List Roles", "request": { "method": "GET", "url": "{{baseUrl}}/roles?page=1&limit=20&search=&active=" } },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"support-agent\",\n  \"name\": \"Support Agent\",\n  \"description\": \"Support\",\n  \"module\": \"support\",\n  \"active\": true,\n  \"all\": false\n}"
+            },
+            "url": "{{baseUrl}}/roles"
+          }
+        },
+        { "name": "Get Role (+ permissions)", "request": { "method": "GET", "url": "{{baseUrl}}/roles/{{id}}" } },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Support Agent\",\n  \"active\": true\n}" },
+            "url": "{{baseUrl}}/roles/{{id}}"
+          }
+        },
+        { "name": "Get Role Permissions", "request": { "method": "GET", "url": "{{baseUrl}}/roles/{{id}}/permissions" } },
+        {
+          "name": "Assign Permissions (by id)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permission_ids\": [\"REPLACE_PERMISSION_ID_1\", \"REPLACE_PERMISSION_ID_2\"]\n}"
+            },
+            "url": "{{baseUrl}}/roles/{{id}}/permissions"
+          }
+        },
+        {
+          "name": "Assign Permissions (by name)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permission_names\": [\"user.me\", \"common.faq.read\"]\n}"
+            },
+            "url": "{{baseUrl}}/roles/{{id}}/permissions"
+          }
+        },
+        { "name": "Clear All Permissions", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" }, "url": "{{baseUrl}}/roles/{{id}}/permissions" } },
+        { "name": "Delete Role", "request": { "method": "DELETE", "url": "{{baseUrl}}/roles/{{id}}" } }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        { "name": "List Permissions", "request": { "method": "GET", "url": "{{baseUrl}}/permissions?page=1&limit=50&search=&module=&guard_name=" } },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"custom.report.export\",\n  \"guard_name\": \"web\",\n  \"module\": \"custom\",\n  \"description\": \"Export reports\"\n}"
+            },
+            "url": "{{baseUrl}}/permissions"
+          }
+        },
+        { "name": "Get Permission", "request": { "method": "GET", "url": "{{baseUrl}}/permissions/{{id}}" } },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated\"\n}" },
+            "url": "{{baseUrl}}/permissions/{{id}}"
+          }
+        },
+        { "name": "Delete Permission", "request": { "method": "DELETE", "url": "{{baseUrl}}/permissions/{{id}}" } }
+      ]
+    },
+    {
       "name": "Zones",
       "item": [
         { "name": "List Zones", "request": { "method": "GET", "url": "{{baseUrl}}/zones" } },
@@ -326,9 +549,47 @@
         { "name": "Update SOS", "request": { "method": "PATCH", "url": "{{baseUrl}}/common/sos/{{id}}" } },
         { "name": "Delete SOS", "request": { "method": "DELETE", "url": "{{baseUrl}}/common/sos/{{id}}" } },
         { "name": "List App Modules", "request": { "method": "GET", "url": "{{baseUrl}}/common/app-modules" } },
-        { "name": "Create App Module", "request": { "method": "POST", "url": "{{baseUrl}}/common/app-modules" } },
+        {
+          "name": "Create App Module (multipart + icon)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/common/app-modules",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "truck", "type": "text" },
+                { "key": "transport_type", "value": "delivery", "type": "text" },
+                { "key": "service_type", "value": "normal", "type": "text" },
+                { "key": "short_description", "value": "truck", "type": "text" },
+                { "key": "description", "value": "truck", "type": "text" },
+                { "key": "order_by", "value": "7", "type": "text" },
+                { "key": "active", "value": "true", "type": "text" },
+                { "key": "mobile_menu_icon", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
         { "name": "Get App Module", "request": { "method": "GET", "url": "{{baseUrl}}/common/app-modules/{{id}}" } },
-        { "name": "Update App Module", "request": { "method": "PATCH", "url": "{{baseUrl}}/common/app-modules/{{id}}" } },
+        {
+          "name": "Update App Module (multipart + icon)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/common/app-modules/{{id}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "truck", "type": "text" },
+                { "key": "transport_type", "value": "delivery", "type": "text" },
+                { "key": "service_type", "value": "normal", "type": "text" },
+                { "key": "short_description", "value": "truck", "type": "text" },
+                { "key": "description", "value": "truck", "type": "text" },
+                { "key": "order_by", "value": "7", "type": "text" },
+                { "key": "active", "value": "true", "type": "text" },
+                { "key": "mobile_menu_icon", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
         { "name": "Delete App Module", "request": { "method": "DELETE", "url": "{{baseUrl}}/common/app-modules/{{id}}" } }
       ]
     },

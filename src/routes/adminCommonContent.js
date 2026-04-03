@@ -1,5 +1,6 @@
 const express = require("express");
 const adminCommonContentController = require("../controllers/adminCommonContentController");
+const { uploadAppModuleIcon, uploadImageError } = require("../middleware/uploadImage");
 
 const router = express.Router();
 
@@ -26,9 +27,19 @@ router.delete("/sos/:id", adminCommonContentController.deleteSos);
 
 // App modules
 router.get("/app-modules", adminCommonContentController.listAppModules);
-router.post("/app-modules", adminCommonContentController.createAppModule);
+router.post(
+  "/app-modules",
+  uploadAppModuleIcon.single("mobile_menu_icon"),
+  uploadImageError,
+  adminCommonContentController.createAppModule
+);
 router.get("/app-modules/:id", adminCommonContentController.getAppModule);
-router.patch("/app-modules/:id", adminCommonContentController.updateAppModule);
+router.patch(
+  "/app-modules/:id",
+  uploadAppModuleIcon.single("mobile_menu_icon"),
+  uploadImageError,
+  adminCommonContentController.updateAppModule
+);
 router.delete("/app-modules/:id", adminCommonContentController.deleteAppModule);
 
 module.exports = router;

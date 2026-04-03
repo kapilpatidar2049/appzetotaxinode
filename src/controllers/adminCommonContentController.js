@@ -351,7 +351,7 @@ async function createAppModule(req, res, next) {
       return err(res, 422, "service_type must be normal, rental, or outstation");
     }
 
-    const doc = await MobileAppSetting.create({
+    const payload = {
       name: String(body.name).trim(),
       transport_type: transportType,
       short_description: body.short_description != null ? String(body.short_description).trim() : "",
@@ -360,7 +360,13 @@ async function createAppModule(req, res, next) {
       mobile_menu_icon: body.mobile_menu_icon || null,
       order_by: body.order_by != null ? String(body.order_by) : "0",
       active: body.active !== false,
-    });
+    };
+
+    if (req.file) {
+      payload.mobile_menu_icon = `/uploads/app-modules/${req.file.filename}`;
+    }
+
+    const doc = await MobileAppSetting.create(payload);
 
     return res
       .status(201)
@@ -413,9 +419,18 @@ async function updateAppModule(req, res, next) {
       }
       doc.service_type = serviceType;
     }
-    if (body.short_description !== undefined) doc.short_description = body.short_description;
-    if (body.description !== undefined) doc.description = body.description;
-    if (body.mobile_menu_icon !== undefined) doc.mobile_menu_icon = body.mobile_menu_icon;
+    if (body.short_description !== undefined) {
+      doc.short_description =
+        body.short_description != null ? String(body.short_description).trim() : "";
+    }
+    if (body.description !== undefined) {
+      doc.description = body.description != null ? String(body.description).trim() : "";
+    }
+    if (req.file) {
+      doc.mobile_menu_icon = `/uploads/app-modules/${req.file.filename}`;
+    } else if (body.mobile_menu_icon !== undefined) {
+      doc.mobile_menu_icon = body.mobile_menu_icon;
+    }
     if (body.order_by !== undefined) doc.order_by = body.order_by != null ? String(body.order_by) : "0";
     if (body.active !== undefined) doc.active = Boolean(body.active);
 

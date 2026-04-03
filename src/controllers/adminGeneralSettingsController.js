@@ -69,6 +69,137 @@ const DEFAULT_GENERAL_SETTINGS = {
   contact_booking_number: "9999999999",
 };
 
+const DEFAULT_CUSTOMIZE_SETTINGS = {
+  enable_luggage_preference_for_user: "1",
+  enable_shipment_load_feature: "1",
+  enable_shipment_unload_feature: "1",
+  enable_digital_signature: "1",
+  how_many_times_a_driver_can_enable_the_my_route_booking_per_day: "1",
+  enable_my_route_booking_feature: "0",
+  enable_web_booking_feature: "1",
+  enable_sub_vehicle_feature: "1",
+  enable_vase_map: "1",
+  enable_modules_for_applications: "both",
+  default_currency_code_for_mobile_app: "INR",
+  default_country_code_for_mobile_app: "IN",
+  enable_country_restrict_on_map: "0",
+  show_wallet_feature_on_mobile_app: "1",
+  show_bank_info_feature_on_mobile_app: "1",
+  show_wallet_feature_on_mobile_app_driver: "1",
+  show_instant_ride_feature_on_mobile_app: "1",
+  show_outstation_ride_feature: "0",
+  show_delivery_outstation_ride_feature: "0",
+  enable_outstation_round_trip_feature: "0",
+  show_owner_module_feature_on_mobile_app: "1",
+  show_wallet_money_transfer_feature_on_mobile_app_for_owner: "1",
+  show_wallet_feature_on_mobile_app_owner: "1",
+  show_wallet_money_transfer_feature_on_mobile_app: "1",
+  show_wallet_money_transfer_feature_on_mobile_app_for_driver: "1",
+  enable_pet_preference_for_user: "0",
+  enable_document_auto_approval: "0",
+  show_rental_ride_feature: "1",
+  show_delivery_rental_ride_feature: "1",
+  show_taxi_rental_ride_feature: "1",
+  show_card_payment_feature: "1",
+  show_ride_otp_feature: "1",
+  show_ride_later_feature: "1",
+  show_ride_without_destination: "1",
+  show_incentive_feature_for_driver: "1",
+  show_driver_level_feature: "0",
+  enable_landing_site: "1",
+  enable_additional_charge_feature: "0",
+  enable_driver_profile_disapprove_on_update: "0",
+  show_delivery_ride_pick_otp_feature: "1",
+  show_delivery_ride_drop_otp_feature: "0",
+  enable_support_ticket_feature: "0",
+  enable_map_appearance_change_on_mobile_app: "0",
+  enable_eta_total_update: "1",
+  enable_driver_leaderboard_feature: "1",
+  enable_multiple_ride_feature: "1",
+  enable_second_ride_for_driver: "1",
+  distance_for_second_ride: "2",
+  enable_maximum_distance_feature: "0",
+  enable_fixed_fare: "1",
+  enable_user_sign_in_email_otp: "1",
+  enable_user_sign_in_email_password: "0",
+  enable_user_sign_in_mobile_otp: "1",
+  enable_user_sign_in_mobile_password: "0",
+  enable_driver_sign_in_email_otp: "1",
+  enable_driver_sign_in_email_password: "0",
+  enable_driver_sign_in_mobile_otp: "1",
+  enable_driver_sign_in_mobile_password: "1",
+  enable_owner_sign_in_email_otp: "1",
+  enable_owner_sign_in_email_password: "1",
+  enable_owner_sign_in_mobile_otp: "1",
+  enable_owner_sign_in_mobile_password: "1",
+  enable_user_email_login: "1",
+  enable_user_mobile_login: "1",
+  enable_driver_email_login: "1",
+  enable_driver_mobile_login: "1",
+  enable_owner_mobile_login: "1",
+  enable_owner_email_login: "1",
+  show_only_total_amount: "1",
+};
+
+const DEFAULT_TRANSPORT_RIDE_SETTINGS = {
+  trip_dispatch_type: "1",
+  driver_search_radius: "3",
+  can_round_the_bill_values: "1",
+  minimum_trip_distane: "25",
+  maximum_time_for_find_drivers_for_bitting_ride: "30",
+  maximum_time_for_accept_reject_bidding_ride: "5",
+  user_can_make_a_ride_after_x_miniutes: "30",
+  user_can_cancel_a_order_in_x_Seconds: "60",
+  minimum_time_for_search_drivers_for_schedule_ride: "30",
+  minimum_time_for_starting_trip_drivers_for_schedule_ride: "30",
+  maximum_time_for_find_drivers_for_regular_ride: "5",
+  trip_accept_reject_duration_for_driver: "30",
+  bidding_low_percentage: "50",
+  bidding_high_percentage: "10",
+  bidding_amount_increase_or_decrease: "10",
+  user_bidding_low_percentage: "50",
+  user_bidding_high_percentage: "10",
+  user_bidding_amount_increase_or_decrease: "10",
+  bidding_ride_maximum_distance: "10",
+};
+
+const DEFAULT_BID_RIDE_SETTINGS = {
+  trip_dispatch_type: "1",
+  driver_search_radius: "3",
+  can_round_the_bill_values: "1",
+  minimum_trip_distane: "25",
+  maximum_time_for_find_drivers_for_bitting_ride: "30",
+  maximum_time_for_accept_reject_bidding_ride: "5",
+  user_can_make_a_ride_after_x_miniutes: "30",
+  user_can_cancel_a_order_in_x_Seconds: "60",
+  minimum_time_for_search_drivers_for_schedule_ride: "30",
+  minimum_time_for_starting_trip_drivers_for_schedule_ride: "30",
+  maximum_time_for_find_drivers_for_regular_ride: "5",
+  trip_accept_reject_duration_for_driver: "30",
+  bidding_low_percentage: "50",
+  bidding_high_percentage: "10",
+  bidding_amount_increase_or_decrease: "10",
+  user_bidding_low_percentage: "50",
+  user_bidding_high_percentage: "10",
+  user_bidding_amount_increase_or_decrease: "10",
+  bidding_ride_maximum_distance: "10",
+};
+
+const DEFAULT_WALLET_SETTINGS = {
+  driver_wallet_minimum_amount_to_get_an_order: "-10000",
+  minimum_wallet_amount_for_transfer: "500",
+  owner_wallet_minimum_amount_to_get_an_order: "-10000",
+  minimum_amount_added_to_wallet: "50",
+  joining_bonus_enabled: "0",
+  joining_bonus_amount_for_user: "0",
+  joining_bonus_amount_for_driver: "0",
+};
+
+const DEFAULT_TIP_SETTINGS = {
+  enable_driver_tips_feature: "1",
+  minimum_tip_amount: "10",
+};
+
 function toObjectIdIfValid(value) {
   const id = String(value || "");
   return mongoose.Types.ObjectId.isValid(id) ? id : null;
@@ -367,7 +498,366 @@ async function updateGeneralSettings(req, res, next) {
   }
 }
 
+async function getCustomizeSettings(req, res, next) {
+  try {
+    const keys = Object.keys(DEFAULT_CUSTOMIZE_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const fromDb = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    return res.json({
+      success: true,
+      message: "success",
+      settings: {
+        ...DEFAULT_CUSTOMIZE_SETTINGS,
+        ...fromDb,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateCustomizeSettings(req, res, next) {
+  try {
+    const source =
+      req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+    const allowedKeys = new Set(Object.keys(DEFAULT_CUSTOMIZE_SETTINGS));
+    const entries = Object.entries(source).filter(([key]) => allowedKeys.has(key));
+
+    for (const [key, value] of entries) {
+      await Setting.findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            key,
+            value: value == null ? DEFAULT_CUSTOMIZE_SETTINGS[key] : String(value),
+            group: "customize_settings",
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const keys = Object.keys(DEFAULT_CUSTOMIZE_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const fromDb = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    return res.json({
+      success: true,
+      message: "Updated",
+      settings: {
+        ...DEFAULT_CUSTOMIZE_SETTINGS,
+        ...fromDb,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getTransportRideSettings(req, res, next) {
+  try {
+    const keys = Object.keys(DEFAULT_TRANSPORT_RIDE_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const fromDb = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    return res.json({
+      success: true,
+      message: "success",
+      settings: {
+        ...DEFAULT_TRANSPORT_RIDE_SETTINGS,
+        ...fromDb,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateTransportRideSettings(req, res, next) {
+  try {
+    const source =
+      req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+    const allowedKeys = new Set(Object.keys(DEFAULT_TRANSPORT_RIDE_SETTINGS));
+    const entries = Object.entries(source).filter(([key]) => allowedKeys.has(key));
+
+    for (const [key, value] of entries) {
+      await Setting.findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            key,
+            value: value == null ? DEFAULT_TRANSPORT_RIDE_SETTINGS[key] : String(value),
+            group: "transport_ride_settings",
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const keys = Object.keys(DEFAULT_TRANSPORT_RIDE_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const fromDb = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    return res.json({
+      success: true,
+      message: "Updated",
+      settings: {
+        ...DEFAULT_TRANSPORT_RIDE_SETTINGS,
+        ...fromDb,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getBidRideSettings(req, res, next) {
+  try {
+    const keys = Object.keys(DEFAULT_BID_RIDE_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const fromDb = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    return res.json({
+      success: true,
+      message: "success",
+      settings: {
+        ...DEFAULT_BID_RIDE_SETTINGS,
+        ...fromDb,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateBidRideSettings(req, res, next) {
+  try {
+    const source =
+      req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+    const allowedKeys = new Set(Object.keys(DEFAULT_BID_RIDE_SETTINGS));
+    const entries = Object.entries(source).filter(([key]) => allowedKeys.has(key));
+
+    for (const [key, value] of entries) {
+      await Setting.findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            key,
+            value: value == null ? DEFAULT_BID_RIDE_SETTINGS[key] : String(value),
+            group: "bid_ride_settings",
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const keys = Object.keys(DEFAULT_BID_RIDE_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const fromDb = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+    return res.json({
+      success: true,
+      message: "Updated",
+      settings: {
+        ...DEFAULT_BID_RIDE_SETTINGS,
+        ...fromDb,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getWalletSettings(req, res, next) {
+  try {
+    const keys = Object.keys(DEFAULT_WALLET_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const byKey = new Map(rows.map((row) => [row.key, row]));
+    const nowIso = new Date().toISOString();
+
+    const resolveRow = (key) => {
+      const row = byKey.get(key);
+      return {
+        id: row?._id || null,
+        name: key,
+        field: "text",
+        category: "Wallet",
+        value: row?.value ?? DEFAULT_WALLET_SETTINGS[key],
+        option_value: null,
+        group_name: null,
+        created_at: row?.createdAt || nowIso,
+        updated_at: row?.updatedAt || nowIso,
+      };
+    };
+
+    return res.json({
+      success: true,
+      message: "success",
+      settings: {
+        driver_wallet: resolveRow("driver_wallet_minimum_amount_to_get_an_order"),
+        minimum_wallet: resolveRow("minimum_wallet_amount_for_transfer"),
+        owner_wallet: resolveRow("owner_wallet_minimum_amount_to_get_an_order"),
+        minimum_wallet_add: resolveRow("minimum_amount_added_to_wallet"),
+        joining_bonus_enabled: resolveRow("joining_bonus_enabled"),
+        joining_bonus_amount_for_user: resolveRow("joining_bonus_amount_for_user"),
+        joining_bonus_amount_for_driver: resolveRow("joining_bonus_amount_for_driver"),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateWalletSettings(req, res, next) {
+  try {
+    const source =
+      req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+
+    const aliasToKey = {
+      driver_wallet: "driver_wallet_minimum_amount_to_get_an_order",
+      minimum_wallet: "minimum_wallet_amount_for_transfer",
+      owner_wallet: "owner_wallet_minimum_amount_to_get_an_order",
+      minimum_wallet_add: "minimum_amount_added_to_wallet",
+      joining_bonus_enabled: "joining_bonus_enabled",
+      joining_bonus_amount_for_user: "joining_bonus_amount_for_user",
+      joining_bonus_amount_for_driver: "joining_bonus_amount_for_driver",
+    };
+
+    const updates = {};
+    for (const [k, v] of Object.entries(source)) {
+      if (DEFAULT_WALLET_SETTINGS[k] !== undefined) {
+        updates[k] = String(v);
+      } else if (aliasToKey[k] && v && typeof v === "object" && v.value !== undefined) {
+        updates[aliasToKey[k]] = String(v.value);
+      } else if (aliasToKey[k] && v !== undefined && typeof v !== "object") {
+        updates[aliasToKey[k]] = String(v);
+      } else if (aliasToKey[k] && v && typeof v === "object" && v.name && v.value !== undefined) {
+        updates[String(v.name)] = String(v.value);
+      }
+    }
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (DEFAULT_WALLET_SETTINGS[key] === undefined) continue;
+      await Setting.findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            key,
+            value,
+            group: "wallet_settings",
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    return await getWalletSettings(req, res, next);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getTipSettings(req, res, next) {
+  try {
+    const keys = Object.keys(DEFAULT_TIP_SETTINGS);
+    const rows = await Setting.find({ key: { $in: keys } }).lean();
+    const byKey = new Map(rows.map((row) => [row.key, row]));
+    const nowIso = new Date().toISOString();
+
+    const resolveRow = (key) => {
+      const row = byKey.get(key);
+      return {
+        id: row?._id || null,
+        name: key,
+        field: "text",
+        category: "tip_settings",
+        value: row?.value ?? DEFAULT_TIP_SETTINGS[key],
+        option_value: null,
+        group_name: null,
+        created_at: row?.createdAt || nowIso,
+        updated_at: row?.updatedAt || nowIso,
+      };
+    };
+
+    const flat = { ...DEFAULT_TIP_SETTINGS };
+    for (const row of rows) {
+      flat[row.key] = row.value;
+    }
+
+    return res.json({
+      success: true,
+      message: "success",
+      enable_driver_tips_feature: resolveRow("enable_driver_tips_feature"),
+      minimum_tip_add: {
+        id: byKey.get("minimum_tip_amount")?._id || null,
+        name: "minimum_tip_amount",
+        field: "text",
+        category: "tip_settings",
+        value: byKey.get("minimum_tip_amount")?.value ?? DEFAULT_TIP_SETTINGS.minimum_tip_amount,
+        option_value: null,
+        group_name: null,
+        created_at: byKey.get("minimum_tip_amount")?.createdAt || nowIso,
+        updated_at: byKey.get("minimum_tip_amount")?.updatedAt || nowIso,
+      },
+      settings: {
+        enable_driver_tips_feature: String(flat.enable_driver_tips_feature),
+        minimum_tip_amount: String(flat.minimum_tip_amount),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateTipSettings(req, res, next) {
+  try {
+    const source =
+      req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+
+    const aliasToKey = {
+      minimum_tip_add: "minimum_tip_amount",
+    };
+
+    const updates = {};
+    for (const [k, v] of Object.entries(source)) {
+      if (DEFAULT_TIP_SETTINGS[k] !== undefined) {
+        updates[k] = String(v);
+      } else if (aliasToKey[k] && v && typeof v === "object" && v.value !== undefined) {
+        updates[aliasToKey[k]] = String(v.value);
+      } else if (aliasToKey[k] && v !== undefined && typeof v !== "object") {
+        updates[aliasToKey[k]] = String(v);
+      } else if (aliasToKey[k] && v && typeof v === "object" && v.name && v.value !== undefined) {
+        updates[String(v.name)] = String(v.value);
+      }
+    }
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (DEFAULT_TIP_SETTINGS[key] === undefined) continue;
+      await Setting.findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            key,
+            value,
+            group: "tip_settings",
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    return await getTipSettings(req, res, next);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getGeneralSettings,
   updateGeneralSettings,
+  getCustomizeSettings,
+  updateCustomizeSettings,
+  getTransportRideSettings,
+  updateTransportRideSettings,
+  getBidRideSettings,
+  updateBidRideSettings,
+  getWalletSettings,
+  updateWalletSettings,
+  getTipSettings,
+  updateTipSettings,
 };
