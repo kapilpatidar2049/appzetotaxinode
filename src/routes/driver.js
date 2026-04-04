@@ -39,6 +39,8 @@ driverRoutes.get(
 // Online / Offline
 driverRoutes.post("/online-offline", authenticate, body, driverController.toggleOnlineOffline);
 
+driverRoutes.post("/update-location", authenticate, body, driverController.updateLiveLocation);
+
 driverRoutes.post("/add-my-route-address", authenticate, body, driverController.addMyRouteAddress);
 
 driverRoutes.post(
@@ -99,6 +101,15 @@ driverRoutes.post("/update/bankinfo", authenticate, body, driverController.updat
 driverRoutes.get("/loyalty/history", authenticate, driverController.loyaltyHistory);
 
 driverRoutes.get("/rewards/history", authenticate, driverController.rewardsHistory);
+
+driverRoutes.get(
+  "/qr-code",
+  authenticate,
+  requireAnyRole(allowDriverGroup),
+  driverController.qrCode
+);
+
+driverRoutes.get("/trip-fare-summary", authenticate, driverController.tripFareSummary);
 
 module.exports = driverRoutes;
 

@@ -43,11 +43,13 @@ adminRoutes.use("/common", require("./adminCommonContent"));
 adminRoutes.use("/support-tickets", require("./adminSupportTickets"));
 adminRoutes.use("/reports", require("./adminReports"));
 adminRoutes.use("/notifications", require("./adminNotifications"));
+adminRoutes.use("/notification-channels", require("./adminNotificationChannels"));
 adminRoutes.use("/general-settings", require("./adminGeneralSettings"));
 adminRoutes.use("/languages", require("./adminLanguages"));
 adminRoutes.use("/preferences", require("./adminPreferences"));
 adminRoutes.use("/roles", require("./adminRoles"));
 adminRoutes.use("/permissions", require("./adminPermissions"));
+adminRoutes.use("/integration-settings", require("./adminIntegrationSettings"));
 
 /** Laravel web.php auth JSON + Inertia page props as JSON (dashboard widgets). */
 adminRoutes.use(require("./adminInertiaJson"));

@@ -1,0 +1,427 @@
+{
+  "info": {
+    "description": "Admin integration settings + notification channel APIs — request/response shapes for Postman or frontend.",
+    "auth_header": "Authorization: Bearer <admin JWT from POST /api/v1/admin/login>",
+    "content_type": "application/json",
+    "integration_base": "/api/v1/admin/integration-settings",
+    "notification_channels_base": "/api/v1/admin/notification-channels"
+  },
+  "integration_settings": {
+    "payment_gateways_list": {
+      "method": "GET",
+      "path": "/api/v1/admin/integration-settings/payment-gateways",
+      "query": {
+        "enabled": "optional: \"1\" | \"true\" to filter enabled only; \"0\" | \"false\" for disabled"
+      },
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "results": [
+            {
+              "_id": "507f1f77bcf86cd799439011",
+              "gateway": "Stripe",
+              "slug": "stripe",
+              "image": "",
+              "order": 0,
+              "enabled": true,
+              "for_ride": true,
+              "for_wallet": true,
+              "supported_countries": ["IN"],
+              "supported_currencies": ["INR"],
+              "createdAt": "2026-01-01T00:00:00.000Z",
+              "updatedAt": "2026-01-01T00:00:00.000Z"
+            }
+          ],
+          "total": 1
+        }
+      }
+    },
+    "payment_gateways_patch": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/integration-settings/payment-gateways/:id",
+      "path_params": { "id": "MongoDB ObjectId of PaymentGateway document" },
+      "body_example": {
+        "gateway": "Stripe",
+        "slug": "stripe",
+        "image": "https://example.com/stripe.png",
+        "order": 0,
+        "enabled": true,
+        "for_ride": true,
+        "for_wallet": true,
+        "supported_countries": ["IN", "US"],
+        "supported_currencies": ["INR", "USD"]
+      },
+      "body_partial_note": "Only include fields you want to change; omitted fields stay unchanged."
+    },
+    "payment_settings_get": {
+      "method": "GET",
+      "path": "/api/v1/admin/integration-settings/payment-settings",
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "rows": [{ "_id": "...", "module": "payment", "key": "enable_stripe", "value": "1" }],
+          "settings": { "enable_stripe": "1", "payment_option": "cash,card,wallet" }
+        }
+      }
+    },
+    "payment_settings_patch": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/integration-settings/payment-settings",
+      "body_note": "Flat object OR { \"settings\": { ... } }. Values are usually strings \"0\"/\"1\" and env \"test\"/\"live\"/\"sandbox\". Only sent keys are upserted (ThirdPartySetting module payment).",
+      "body_full_keys_example": {
+        "payment_option": "cash,card,wallet",
+        "enable_paystack": "0",
+        "paystack_environment": "test",
+        "paystack_test_secret_key": "",
+        "paystack_production_secret_key": "",
+        "paystack_test_publishable_key": "",
+        "paystack_production_publishable_key": "",
+        "enable_cashfree": "0",
+        "cash_free_environment": "test",
+        "cash_free_secret_key": "",
+        "cash_free_production_secret_key": "",
+        "cash_free_app_id": "",
+        "cash_free_production_app_id": "",
+        "enable_mercadopago": "0",
+        "mercadopago_environment": "test",
+        "mercadopago_test_public_key": "",
+        "mercadopago_live_public_key": "",
+        "mercadopago_test_access_token": "",
+        "mercadopago_live_access_token": "",
+        "enable_stripe": "1",
+        "stripe_environment": "test",
+        "stripe_test_secret_key": "sk_test_xxx",
+        "stripe_live_secret_key": "sk_live_xxx",
+        "stripe_test_publishable_key": "pk_test_xxx",
+        "stripe_live_publishable_key": "pk_live_xxx",
+        "enable_stripe_authorization": "0",
+        "enable_xendit": "0",
+        "xendi_pay_environment": "test",
+        "xendi_pay_test_api_key": "",
+        "xendit_pay_live_api_key": "",
+        "enable_flutter_wave": "0",
+        "flutter_wave_environment": "test",
+        "flutter_wave_test_secret_key": "",
+        "flutter_wave_production_secret_key": "",
+        "enable_razor_pay": "0",
+        "razor_pay_environment": "test",
+        "razor_pay_test_api_key": "",
+        "razor_pay_live_api_key": "",
+        "razor_pay_secrect_key": "",
+        "razor_pay_test_secrect_key": "",
+        "enable_khalti_pay": "0",
+        "khalti_pay_environment": "test",
+        "khalti_pay_test_api_key": "",
+        "khalti_pay_live_api_key": "",
+        "enable_flexpaie": "0",
+        "flexpaie_environment": "test",
+        "flexpaie_test_bearer_token": "",
+        "flexpaie_production_bearer_token": "",
+        "enable_openpix": "0",
+        "openpix_environment": "test",
+        "openpix_test_api_key": "",
+        "openpix_live_api_key": "",
+        "enable_myfatoora": "0",
+        "myfatoora_environment": "test",
+        "myfatoora_test_token": "",
+        "myfatoora_live_token": "",
+        "enable_paymongo": "0",
+        "paymongo_environment": "test",
+        "paymongo_test_secret_key": "",
+        "paymongo_live_secret_key": "",
+        "enable_paypal": "0",
+        "paypal_environment": "sandbox",
+        "paypal_sandbox_client_id": "",
+        "paypal_sandbox_client_secret": "",
+        "paypal_sandbox_app_id": "",
+        "paypal_client_id": "",
+        "paypal_client_secret": "",
+        "paypal_app_id": "",
+        "paypal_notify_url": "",
+        "enable_fedapay": "0",
+        "fedapay_environment": "test",
+        "fedapay_test_secret_key": "",
+        "fedapay_live_secret_key": ""
+      },
+      "response_example": {
+        "success": true,
+        "message": "Updated",
+        "data": {
+          "updated_count": 5,
+          "rows": [],
+          "settings": {}
+        }
+      }
+    },
+    "sms_get": {
+      "method": "GET",
+      "path": "/api/v1/admin/integration-settings/sms",
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": {
+          "rows": [],
+          "settings": { "enable_firebase_otp": "1" },
+          "gateways": [{ "key": "enable_firebase_otp", "name": "Firebase OTP", "active": true }]
+        }
+      }
+    },
+    "sms_patch": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/integration-settings/sms",
+      "body_note": "Flat or { \"settings\": { ... } }; module sms.",
+      "body_example": {
+        "enable_firebase_otp": "1",
+        "enable_twilio": "0",
+        "twilio_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "twilio_token": "your_auth_token",
+        "twilio_from_number": "+15551234567",
+        "enable_sms_ala": "0",
+        "smsala_api_key": "",
+        "smsala_secrect_key": "",
+        "smsala_token": "",
+        "smsala_from_number": "",
+        "enable_msg91": "0",
+        "msg91_auth_key": "",
+        "msg91_template_id": "",
+        "msg91_sender_id": "OTPSMS",
+        "enable_sparrow": "0",
+        "sparrow_sender_id": "",
+        "sparrow_token": "",
+        "enable_sms_india_hub": "0",
+        "sms_india_hub_api_key": "",
+        "sms_india_hub_sid": "",
+        "enable_kudi_sms_api_key": "0",
+        "kudi_sms_api_key": "",
+        "kudi_sms_sender_id": ""
+      }
+    },
+    "firebase_get": {
+      "method": "GET",
+      "path": "/api/v1/admin/integration-settings/firebase",
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": { "rows": [], "settings": {} }
+      }
+    },
+    "firebase_patch": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/integration-settings/firebase",
+      "body_note": "Flat or { \"settings\": { ... } }; module firebase.",
+      "body_example": {
+        "firebase_api_key": "AIza...",
+        "firebase_auth_domain": "your-app.firebaseapp.com",
+        "firebase_project_id": "your-project-id",
+        "firebase_storage_bucket": "your-app.appspot.com",
+        "firebase_messaging_sender_id": "123456789012",
+        "firebase_app_id": "1:123:web:abc",
+        "firebase_database_url": "https://your-app.firebaseio.com"
+      }
+    },
+    "map_get": {
+      "method": "GET",
+      "path": "/api/v1/admin/integration-settings/map",
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": { "rows": [], "settings": {} }
+      }
+    },
+    "map_patch": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/integration-settings/map",
+      "body_note": "Flat or { \"settings\": { ... } }; module map.",
+      "body_example": {
+        "map_type": "google_map",
+        "enable_vase_map": "1",
+        "google_map_key": "YOUR_GOOGLE_MAPS_KEY",
+        "google_map_key_for_distance_matrix": "YOUR_DISTANCE_MATRIX_KEY"
+      }
+    },
+    "mail_get": {
+      "method": "GET",
+      "path": "/api/v1/admin/integration-settings/mail",
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": { "rows": [], "settings": {} }
+      }
+    },
+    "mail_patch": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/integration-settings/mail",
+      "body_note": "Flat or { \"settings\": { ... } }; stored under module mail_config.",
+      "body_example": {
+        "mail_mailer": "smtp",
+        "mail_host": "smtp.gmail.com",
+        "mail_port": "587",
+        "mail_username": "noreply@example.com",
+        "mail_password": "app_password_here",
+        "mail_encryption": "tls",
+        "mail_from_address": "noreply@example.com",
+        "mail_from_name": "Taxi App"
+      }
+    }
+  },
+  "notification_channels": {
+    "list": {
+      "method": "GET",
+      "path": "/api/v1/admin/notification-channels",
+      "query": {
+        "page": "default 1",
+        "limit": "default 10, max 100",
+        "roletype": "filter by role e.g. user, driver",
+        "search": "topics, topics_content, email_subject (regex)",
+        "sort": "created_at, updated_at, topics, role; prefix - for desc e.g. -created_at"
+      },
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "results": [
+          {
+            "id": "uuid-or-id-string",
+            "role": "user",
+            "topics": "trip_completed",
+            "topics_content": "",
+            "push_notification": 1,
+            "mail": 0,
+            "sms": 0,
+            "email_subject": "",
+            "logo_img": "",
+            "mail_body": "",
+            "button_name": "",
+            "button_url": "",
+            "show_button": 0,
+            "banner_img": "",
+            "show_img": 0,
+            "footer": "",
+            "footer_content": "",
+            "footer_copyrights": "",
+            "show_fbicon": 1,
+            "show_instaicon": 1,
+            "show_twittericon": 1,
+            "show_linkedinicon": 1,
+            "push_title": "",
+            "push_body": "",
+            "translation_dataset": "",
+            "created_at": "2026-01-01T00:00:00.000000Z",
+            "updated_at": "2026-01-01T00:00:00.000000Z",
+            "notification_channel_translation_words": []
+          }
+        ],
+        "paginator": {
+          "current_page": 1,
+          "data": [],
+          "first_page_url": "...",
+          "from": 1,
+          "last_page": 1,
+          "last_page_url": "...",
+          "links": [],
+          "next_page_url": null,
+          "path": "https://host/api/v1/admin/notification-channels",
+          "per_page": 10,
+          "prev_page_url": null,
+          "to": 1,
+          "total": 1
+        }
+      }
+    },
+    "get_one": {
+      "method": "GET",
+      "path": "/api/v1/admin/notification-channels/:id",
+      "path_params": { "id": "MongoDB ObjectId (24 hex) or uuid string" },
+      "response_example": {
+        "success": true,
+        "message": "success",
+        "data": {}
+      }
+    },
+    "create": {
+      "method": "POST",
+      "path": "/api/v1/admin/notification-channels",
+      "body_required": { "topics": "unique topic key for the channel" },
+      "body_example": {
+        "uuid": "optional; auto-generated if omitted",
+        "role": "user",
+        "topics": "custom_event_key",
+        "topics_content": "Human readable description",
+        "push_notification": 1,
+        "mail": 0,
+        "sms": 0,
+        "email_subject": "Subject",
+        "logo_img": "https://...",
+        "mail_body": "<p>HTML body</p>",
+        "button_name": "Open app",
+        "button_url": "https://...",
+        "show_button": 0,
+        "banner_img": "",
+        "show_img": 0,
+        "footer": "",
+        "footer_content": "",
+        "footer_copyrights": "",
+        "show_fbicon": 1,
+        "show_instaicon": 1,
+        "show_twittericon": 1,
+        "show_linkedinicon": 1,
+        "push_title": "Title",
+        "push_body": "Body",
+        "translation_dataset": "",
+        "notification_channel_translation_words": [
+          {
+            "locale": "en",
+            "email_subject": "",
+            "mail_body": "",
+            "button_name": "",
+            "footer_content": "",
+            "footer_copyrights": "",
+            "push_title": "",
+            "push_body": ""
+          }
+        ]
+      },
+      "response_status": 201
+    },
+    "update": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/notification-channels/:id",
+      "body_example": {
+        "topics_content": "Updated description",
+        "push_notification": 1,
+        "mail": 1,
+        "sms": 0,
+        "email_subject": "New subject",
+        "push_title": "Push title",
+        "push_body": "Push body",
+        "notification_channel_translation_words": [
+          {
+            "locale": "hi",
+            "email_subject": "",
+            "mail_body": "",
+            "button_name": "",
+            "footer_content": "",
+            "footer_copyrights": "",
+            "push_title": "",
+            "push_body": ""
+          }
+        ]
+      }
+    },
+    "toggle_push": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/notification-channels/:id/push",
+      "body_example": { "push_notification": 1 },
+      "body_alternate": { "enabled": true },
+      "note": "Send push_notification or enabled (0/1, true/false)."
+    },
+    "toggle_mail": {
+      "method": "PATCH",
+      "path": "/api/v1/admin/notification-channels/:id/mail",
+      "body_example": { "mail": 1 },
+      "body_alternate": { "enabled": true },
+      "note": "Send mail or enabled (0/1, true/false)."
+    }
+  }
+}

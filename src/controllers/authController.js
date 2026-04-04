@@ -10,6 +10,7 @@ const Driver = require("../models/Driver");
 const Owner = require("../models/Owner");
 const AdminDetail = require("../models/AdminDetail");
 const PasswordResetToken = require("../models/PasswordResetToken");
+const { deliverOtp } = require("../services/smsGateway");
 
 // Utility: fetch a role id by slug (e.g. 'user', 'driver')
 async function getRoleIdBySlug(slug) {
@@ -191,7 +192,7 @@ async function loginAdmin(req, res) {
 // POST /api/v1/auth/mobile-otp
 async function mobileOtp(req, res) {
   try {
-    const { mobile, country_code } = req.body || {};
+    const { mobile, country_code, device_token } = req.body || {};
 
     if (!mobile) {
       return res.status(422).json({
@@ -206,20 +207,35 @@ async function mobileOtp(req, res) {
       otp = 123456;
     }
 
-    
-      const existing = await MobileOtp.findOne({ mobile }).lean();
-      if (existing) {
-        await MobileOtp.updateOne(
-          { _id: existing._id },
-          { $set: { otp: String(otp), country_code: country_code || null } }
-        );
-      } else {
-        await MobileOtp.create({ mobile, otp: String(otp), country_code: country_code || null });
-      }
-    
+    const existing = await MobileOtp.findOne({ mobile }).lean();
+    if (existing) {
+      await MobileOtp.updateOne(
+        { _id: existing._id },
+        { $set: { otp: String(otp), country_code: country_code || null } }
+      );
+    } else {
+      await MobileOtp.create({ mobile, otp: String(otp), country_code: country_code || null });
+    }
 
-    // Here we do not integrate actual SMS gateways; that should be added later.
-    // For now we just respond success like Laravel.
+    const demo = process.env.APP_FOR === "demo" || process.env.APP_FOR === "demo1";
+    const sent = await deliverOtp({
+      mobile,
+      country_code,
+      otp,
+      device_token,
+      skipExternal: demo,
+    });
+
+    if (!sent.ok) {
+      const msg = sent.error || "Could not send OTP";
+      const status =
+        /device_token|Firebase OTP is on|Invalid mobile/i.test(msg) ? 422 : 503;
+      return res.status(status).json({
+        success: false,
+        message: msg,
+      });
+    }
+
     return res.json({
       success: true,
       message: "success",
@@ -244,10 +260,9 @@ async function validateSmsOtp(req, res) {
       }else{
         valid = false;
       }
-    }else{
+    } else {
       const row = await MobileOtp.findOne({ mobile, otp: String(otp) }).lean();
       valid = Boolean(row);
-      const token = signToken({ id: row.id });
     }
 
     if (!valid) {

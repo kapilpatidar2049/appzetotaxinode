@@ -126,6 +126,35 @@ async function publishTripRtdbPatch(requestId, patch) {
   await updateRealtimeValue(`requests/${id}`, { ...patch, updated_at: rtdbNow() });
 }
 
+/**
+ * Driver live GPS — merges into `drivers/driver_{id}` (GeoFire-style `l`, plus lat/lng aliases).
+ * No-ops invalid coords; RTDB no-op when Firebase is not configured.
+ */
+async function publishDriverLiveLocation(driverDoc, coords, extras = {}) {
+  if (!driverDoc?._id) return;
+  const lat = Number(coords?.lat);
+  const lng = Number(coords?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  const id = strId(driverDoc._id);
+  const payload = {
+    latitude: lat,
+    longitude: lng,
+    lat,
+    lng,
+    l: [lat, lng],
+    is_available: Boolean(driverDoc.available),
+    updated_at: rtdbNow(),
+  };
+  if (driverDoc.service_location_id != null && driverDoc.service_location_id !== "") {
+    payload.service_location_id = strId(driverDoc.service_location_id);
+  }
+  const br = extras.bearing != null ? Number(extras.bearing) : null;
+  const hd = extras.heading != null ? Number(extras.heading) : null;
+  if (Number.isFinite(br)) payload.bearing = br;
+  if (Number.isFinite(hd)) payload.heading = hd;
+  await updateRealtimeValue(`drivers/driver_${id}`, payload);
+}
+
 /** RatingsController — after rating, tear down GPS/safety mirrors. */
 async function publishRatingCleanup(requestId) {
   const id = strId(requestId);
@@ -143,4 +172,5 @@ module.exports = {
   removeBidMeta,
   publishTripRtdbPatch,
   publishRatingCleanup,
+  publishDriverLiveLocation,
 };

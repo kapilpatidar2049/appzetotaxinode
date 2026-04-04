@@ -1,0 +1,89 @@
+{
+  "info": {
+    "base_url": "/api/v1/admin/integration-settings",
+    "auth": "Authorization: Bearer <admin JWT from POST /api/v1/auth/admin/login>",
+    "note": "PATCH body: either a flat object of key-value pairs, OR { \"settings\": { ...same keys... } }. Only sent keys are upserted in ThirdPartySetting."
+  },
+  "patch_sms_flat_example": {
+    "enable_firebase_otp": "1",
+    "enable_twilio": "0",
+    "twilio_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "twilio_token": "your_auth_token",
+    "twilio_from_number": "+15551234567",
+    "enable_sms_ala": "0",
+    "smsala_api_key": "",
+    "smsala_secrect_key": "",
+    "smsala_token": "",
+    "smsala_from_number": "",
+    "enable_msg91": "0",
+    "msg91_auth_key": "",
+    "msg91_template_id": "",
+    "msg91_sender_id": "OTPSMS",
+    "enable_sparrow": "0",
+    "sparrow_sender_id": "",
+    "sparrow_token": "",
+    "enable_sms_india_hub": "0",
+    "sms_india_hub_api_key": "",
+    "sms_india_hub_sid": "",
+    "enable_kudi_sms_api_key": "0",
+    "kudi_sms_api_key": "",
+    "kudi_sms_sender_id": ""
+  },
+  "patch_sms_wrapped_example": {
+    "settings": {
+      "enable_firebase_otp": "1",
+      "enable_twilio": "1",
+      "twilio_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "twilio_token": "your_auth_token",
+      "twilio_from_number": "+15551234567"
+    }
+  },
+  "patch_payment_settings_example": {
+    "enable_stripe": "1",
+    "stripe_environment": "test",
+    "stripe_test_secret_key": "sk_test_xxx",
+    "stripe_live_secret_key": "sk_live_xxx",
+    "stripe_test_publishable_key": "pk_test_xxx",
+    "stripe_live_publishable_key": "pk_live_xxx",
+    "enable_razor_pay": "0",
+    "razor_pay_environment": "test",
+    "razor_pay_test_api_key": "",
+    "razor_pay_live_api_key": "",
+    "razor_pay_secrect_key": "",
+    "payment_option": "cash,card,wallet"
+  },
+  "patch_firebase_example": {
+    "firebase_api_key": "AIza...",
+    "firebase_auth_domain": "your-app.firebaseapp.com",
+    "firebase_project_id": "your-project-id",
+    "firebase_storage_bucket": "your-app.appspot.com",
+    "firebase_messaging_sender_id": "123456789012",
+    "firebase_app_id": "1:123:web:abc",
+    "firebase_database_url": "https://your-app.firebaseio.com"
+  },
+  "patch_map_example": {
+    "map_type": "google_map",
+    "enable_vase_map": "1",
+    "google_map_key": "YOUR_GOOGLE_MAPS_KEY",
+    "google_map_key_for_distance_matrix": "YOUR_DISTANCE_MATRIX_KEY"
+  },
+  "patch_mail_example": {
+    "mail_mailer": "smtp",
+    "mail_host": "smtp.gmail.com",
+    "mail_port": "587",
+    "mail_username": "noreply@example.com",
+    "mail_password": "app_password_here",
+    "mail_encryption": "tls",
+    "mail_from_address": "noreply@example.com",
+    "mail_from_name": "Taxi App"
+  },
+  "patch_payment_gateway_by_id": {
+    "endpoint": "PATCH /api/v1/admin/integration-settings/payment-gateways/MONGODB_OBJECT_ID",
+    "body": {
+      "enabled": true,
+      "for_ride": true,
+      "for_wallet": true,
+      "order": 0
+    }
+  }
+}

@@ -461,6 +461,11 @@
       "module": "sms"
     },
     {
+      "key": "msg91_sender_id",
+      "value": "Your MSG91 DLT sender (6 chars)",
+      "module": "sms"
+    },
+    {
       "key": "enable_sms_ala",
       "value": "0",
       "module": "sms"
@@ -483,6 +488,21 @@
     {
       "key": "smsala_from_number",
       "value": "Your SMS ALA Mobile Number",
+      "module": "sms"
+    },
+    {
+      "key": "enable_sms_india_hub",
+      "value": "0",
+      "module": "sms"
+    },
+    {
+      "key": "sms_india_hub_api_key",
+      "value": "Your SMS India Hub Api Key",
+      "module": "sms"
+    },
+    {
+      "key": "sms_india_hub_sid",
+      "value": "Your SMS India Hub SID",
       "module": "sms"
     },
     {

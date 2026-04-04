@@ -10,6 +10,8 @@ const SupportTicketMessage = require("../models/SupportTicketMessage");
 const SupportTicketTitle = require("../models/SupportTicketTitle");
 const Preference = require("../models/Preference");
 const Referral = require("../models/Referral");
+const ReferralCondition = require("../models/ReferralCondition");
+const ReferralAdminSettings = require("../models/ReferralAdminSettings");
 const Notification = require("../models/Notification");
 const NotificationChannel = require("../models/NotificationChannel");
 const PromotionTemplate = require("../models/PromotionTemplate");
@@ -22,6 +24,13 @@ const Setting = require("../models/Setting");
 const Language = require("../models/Language");
 const GoodsType = require("../models/GoodsType");
 const User = require("../models/User");
+const ComplaintTitle = require("../models/ComplaintTitle");
+const Complaint = require("../models/Complaint");
+const RequestModel = require("../models/Request");
+const Driver = require("../models/Driver");
+const Owner = require("../models/Owner");
+const CarMake = require("../models/CarMake");
+const CarModel = require("../models/CarModel");
 const mongoose = require("mongoose");
 
 function ok(res, data = null, message = "success") {
@@ -55,25 +64,55 @@ async function onBoarding(req, res) {
   }
 }
 
+function mapOnboardingPublicRow(row, defaultScreen) {
+  const translation = row.translation_dataset;
+  const translation_dataset =
+    typeof translation === "string"
+      ? translation
+      : translation != null
+        ? JSON.stringify(translation)
+        : "";
+  return {
+    order: row.order != null ? row.order : row.sn_o,
+    id: row.sn_o,
+    screen: row.screen || defaultScreen,
+    title: row.title ?? "",
+    onboarding_image: row.onboarding_image ?? "",
+    description: row.description ?? "",
+    active: row.active ? 1 : 0,
+    translation_dataset,
+  };
+}
+
+function resJsonOnboarding(data) {
+  return { success: true, data: { onboarding: { data } } };
+}
+
 async function onBoardingDriver(req, res) {
   try {
-    const rows = await OnboardingScreen.find({ active: true, user_type: "driver" })
-      .sort({ sn_o: 1 })
+    const rows = await OnboardingScreen.find({
+      active: true,
+      $or: [{ user_type: "driver" }, { screen: "driver" }],
+    })
+      .sort({ order: 1, sn_o: 1 })
       .lean();
-    return ok(res, rows);
+    return res.json(resJsonOnboarding(rows.map((row) => mapOnboardingPublicRow(row, "driver"))));
   } catch {
-    return ok(res, []);
+    return res.json(resJsonOnboarding([]));
   }
 }
 
 async function onBoardingOwner(req, res) {
   try {
-    const rows = await OnboardingScreen.find({ active: true, user_type: "owner" })
-      .sort({ sn_o: 1 })
+    const rows = await OnboardingScreen.find({
+      active: true,
+      $or: [{ user_type: "owner" }, { screen: "owner" }],
+    })
+      .sort({ order: 1, sn_o: 1 })
       .lean();
-    return ok(res, rows);
+    return res.json(resJsonOnboarding(rows.map((row) => mapOnboardingPublicRow(row, "owner"))));
   } catch {
-    return ok(res, []);
+    return res.json(resJsonOnboarding([]));
   }
 }
 
@@ -267,6 +306,81 @@ async function ticketList(req, res) {
   }
 }
 
+async function assertRequestAccessibleForComplaint(req, requestId) {
+  const userId = req.user?.id;
+  const role = req.user?.role || "user";
+  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+    return "Invalid request_id";
+  }
+  const trip = await RequestModel.findById(requestId).lean();
+  if (!trip) {
+    return "Request not found";
+  }
+  if (role === "user") {
+    if (String(trip.user_id) !== String(userId)) return "Forbidden";
+    return null;
+  }
+  if (role === "driver") {
+    const driver = await Driver.findOne({ user_id: userId }).lean();
+    if (!driver) return "Driver profile not found";
+    if (String(trip.driver_id) !== String(driver._id)) return "Forbidden";
+    return null;
+  }
+  if (role === "owner") {
+    const owner = await Owner.findOne({ user_id: userId }).lean();
+    if (!owner) return "Owner profile not found";
+    if (!trip.owner_id || String(trip.owner_id) !== String(owner._id)) return "Forbidden";
+    return null;
+  }
+  if (String(trip.user_id) === String(userId)) return null;
+  return "Forbidden";
+}
+
+// ComplaintController (mobile: common/complaint-titles, common/make-complaint)
+async function complaintTitles(req, res) {
+  try {
+    const rows = await ComplaintTitle.find({ active: true }).sort({ order: 1, createdAt: 1 }).lean();
+    return ok(res, rows);
+  } catch {
+    return ok(res, []);
+  }
+}
+
+async function makeComplaint(req, res) {
+  try {
+    const userId = req.user?.id;
+    const body = req.body || {};
+    const titleId = body.complaint_title_id || body.title_id;
+    const text = String(body.complaint_text || body.description || body.message || "").trim();
+    if (!titleId) return fail(res, "complaint_title_id or title_id is required", 422);
+    if (!text) return fail(res, "complaint_text, description, or message is required", 422);
+
+    const title = await ComplaintTitle.findOne({ _id: titleId, active: true }).lean();
+    if (!title) return fail(res, "Invalid complaint title", 422);
+
+    let requestId = body.request_id;
+    if (requestId != null && String(requestId).trim() === "") requestId = null;
+    if (requestId) {
+      const errMsg = await assertRequestAccessibleForComplaint(req, requestId);
+      if (errMsg) {
+        const code = errMsg === "Request not found" ? 404 : errMsg === "Forbidden" ? 403 : 422;
+        return fail(res, errMsg, code);
+      }
+    }
+
+    const doc = await Complaint.create({
+      user_id: userId,
+      complaint_title_id: titleId,
+      request_id: requestId || undefined,
+      description: text,
+      status: "open",
+    });
+    return ok(res, { complaint_id: doc._id }, "Complaint submitted");
+  } catch {
+    return fail(res);
+  }
+}
+
 // PreferenceController
 async function preferences(req, res) {
   try {
@@ -346,14 +460,116 @@ async function referralCondition(req, res) {
   }
 }
 
+const DEFAULT_DRIVER_REFERRAL_PLACEHOLDERS = {
+  referral_commission_amount_for_user: "0",
+  referral_commission_for_new_driver_from_referer_user: "0",
+  referral_commission_for_new_user_from_referer_user: "0",
+  referral_condition_driver_earning_amount: "0",
+  referral_condition_driver_ride_count: "0",
+  referral_condition_user_ride_count: "0",
+  referral_condition_user_spent_amount: "0",
+  referral_type: "instant",
+};
+
+const DRIVER_REFERRAL_SHORT_TO_CONDITION = {
+  instant: "instant_referrer_driver",
+  instant_and_new: "instant_referrer_driver_and_new_driver",
+  conditional_ride_count: "conditional_for_referrer_driver_ride_count",
+  conditional_earning: "conditional_for_referrer_driver_earnings",
+  dual_conditional_ride_count:
+    "dual_conditional_for_referrer_driver_and_new_driver_or_new_user_ride_count",
+  dual_conditional_earning:
+    "dual_conditional_for_referrer_driver_and_new_driver_or_new_user_earnings",
+};
+
+function mergeDriverReferralForPlaceholders(stored) {
+  return {
+    ...DEFAULT_DRIVER_REFERRAL_PLACEHOLDERS,
+    ...(stored && typeof stored === "object" ? stored : {}),
+  };
+}
+
+function applyDriverReferralDescriptionVars(text, settings) {
+  if (text == null) return "";
+  let s = String(text);
+  const m = {
+    "{referred_driver_amount}": String(settings.referral_commission_amount_for_user ?? "0"),
+    "{new_driver_amount}": String(settings.referral_commission_for_new_driver_from_referer_user ?? "0"),
+    "{new_user_amount}": String(settings.referral_commission_for_new_user_from_referer_user ?? "0"),
+    "{user_ride_count}": String(settings.referral_condition_user_ride_count ?? "0"),
+    "{driver_ride_count}": String(settings.referral_condition_driver_ride_count ?? "0"),
+    "{user_spent_amount}": String(settings.referral_condition_user_spent_amount ?? "0"),
+    "{driver_earning_amount}": String(settings.referral_condition_driver_earning_amount ?? "0"),
+  };
+  for (const [k, v] of Object.entries(m)) {
+    s = s.split(k).join(v);
+  }
+  return s;
+}
+
+async function findDriverReferralContentCondition(adminReferralType) {
+  const short = String(adminReferralType || "instant").trim() || "instant";
+  let row = await ReferralCondition.findOne({
+    label_referral: "driver",
+    referral_type: short,
+  }).lean();
+  if (row) return row;
+  const mapped = DRIVER_REFERRAL_SHORT_TO_CONDITION[short];
+  if (mapped) {
+    row = await ReferralCondition.findOne({
+      label_referral: "driver",
+      referral_type: mapped,
+    }).lean();
+    if (row) return row;
+  }
+  return ReferralCondition.findOne({
+    label_referral: "driver",
+    referral_type: "instant_referrer_driver",
+  }).lean();
+}
+
+function mapDriverReferralConditionPayload(row, settings) {
+  if (!row) return null;
+  const description = applyDriverReferralDescriptionVars(row.description, settings);
+  const translation_dataset = JSON.stringify({
+    en: { locale: "en", description },
+  });
+  return {
+    id: String(row._id),
+    referral_type: row.referral_type,
+    description,
+    label_referral: row.label_referral,
+    translation_dataset,
+  };
+}
+
 async function driverReferralCondition(req, res) {
   try {
-    
-      const row = await Setting.findOne({ key: "referral_condition_driver" }).lean();
-      return ok(res, row || null);
-    
+    const doc = await ReferralAdminSettings.findOne().lean();
+    const merged = mergeDriverReferralForPlaceholders(doc?.driver_referral);
+    const [contentRow, bannerRow] = await Promise.all([
+      findDriverReferralContentCondition(merged.referral_type),
+      ReferralCondition.findOne({
+        label_referral: "driver",
+        referral_type: "driver_banner_text",
+      }).lean(),
+    ]);
+    const referral_content = { data: mapDriverReferralConditionPayload(contentRow, merged) };
+    const driver_banner = { data: mapDriverReferralConditionPayload(bannerRow, merged) };
+    return res.json({
+      success: true,
+      message: "referrals_description",
+      data: { referral_content, driver_banner },
+    });
   } catch {
-    return ok(res, null);
+    return res.json({
+      success: true,
+      message: "referrals_description",
+      data: {
+        referral_content: { data: null },
+        driver_banner: { data: null },
+      },
+    });
   }
 }
 
@@ -377,6 +593,77 @@ async function mobileTerms(req, res) {
     
   } catch {
     return ok(res, { content: "" });
+  }
+}
+
+function mapVehicleTypeQueryToMakeFor(v) {
+  const key = String(v || "").toLowerCase().trim();
+  const map = {
+    taxi: "taxi",
+    car: "taxi",
+    delivery: "taxi",
+    bike: "motor_bike",
+    motor_bike: "motor_bike",
+    truck: "truck",
+  };
+  if (map[key]) return map[key];
+  if (["taxi", "motor_bike", "truck"].includes(key)) return key;
+  return null;
+}
+
+/** Flutter path `GET /types/service?transport_type=...&service_location=...` (alias for `/types/:id`). */
+async function vehicleTypesServicePath(req, res) {
+  try {
+    const q = req.query || {};
+    const serviceLocation =
+      q.service_location || q.service_location_id || q.service || q.servicelocation;
+    if (!serviceLocation || !mongoose.Types.ObjectId.isValid(String(serviceLocation))) {
+      return fail(
+        res,
+        "service_location (or service_location_id) query with a valid id is required",
+        422
+      );
+    }
+    req.params = { ...req.params, service_location: String(serviceLocation) };
+    return vehicleTypes(req, res);
+  } catch {
+    return fail(res);
+  }
+}
+
+// CarMakeAndModelController (mobile registration)
+async function carMakes(req, res) {
+  try {
+    const transportTypeRaw = req.query.transport_type;
+    const vehicleTypeRaw = req.query.vehicle_type;
+    const transportType = transportTypeRaw ? String(transportTypeRaw).toLowerCase() : null;
+    const filter = {};
+    if (transportType) {
+      if (!["taxi", "delivery", "both"].includes(transportType)) {
+        return fail(res, "transport_type must be taxi, delivery, or both", 422);
+      }
+      filter.$or = [{ transport_type: transportType }, { transport_type: "both" }];
+    }
+    if (vehicleTypeRaw) {
+      const makeFor = mapVehicleTypeQueryToMakeFor(vehicleTypeRaw);
+      if (makeFor) filter.vehicle_make_for = makeFor;
+    }
+    const rows = await CarMake.find(filter).sort({ name: 1 }).lean();
+    return ok(res, rows);
+  } catch {
+    return fail(res);
+  }
+}
+
+async function carModelsByMake(req, res) {
+  try {
+    const { make } = req.params;
+    const exists = await CarMake.findById(make).lean();
+    if (!exists) return ok(res, []);
+    const rows = await CarModel.find({ make_id: make }).sort({ name: 1 }).lean();
+    return ok(res, rows);
+  } catch {
+    return fail(res);
   }
 }
 
@@ -521,6 +808,8 @@ module.exports = {
   replyMessage,
   viewTicket,
   ticketList,
+  complaintTitles,
+  makeComplaint,
   preferences,
   preferencesStore,
   referralProgress,
@@ -529,8 +818,11 @@ module.exports = {
   driverReferralCondition,
   mobilePrivacy,
   mobileTerms,
+  vehicleTypesServicePath,
   vehicleTypes,
   subVehicleTypes,
+  carMakes,
+  carModelsByMake,
   notifications,
   deleteNotification,
   deleteAllNotification,

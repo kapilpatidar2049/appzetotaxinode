@@ -13,6 +13,8 @@ const DriverBankInfo = require("../models/DriverBankInfo");
 const DriverVehicleType = require("../models/DriverVehicleType");
 const Request = require("../models/Request");
 const User = require("../models/User");
+const mongoose = require("mongoose");
+const { publishDriverLiveLocation } = require("../services/realtimeTripSync");
 
 function ok(res, data = null, message = "success") {
   return res.json({ success: true, message, data });
@@ -159,6 +161,40 @@ async function toggleOnlineOffline(req, res) {
       await Driver.updateOne({ _id: driver._id || driver.id }, { $set: { available: Boolean(next) } });
     
     return ok(res, { available: Boolean(next) });
+  } catch {
+    return fail(res);
+  }
+}
+
+/** POST /api/v1/driver/update-location — Mongo + Firebase RTDB `drivers/driver_{id}` */
+async function updateLiveLocation(req, res) {
+  try {
+    const userId = req.user?.id;
+    const driver = await getDriverByUserId(userId);
+    if (!driver) return fail(res, "Driver not found", 404);
+
+    const { lat, lng, bearing, heading } = req.body || {};
+    if (lat == null || lng == null) {
+      return fail(res, "lat and lng are required", 422);
+    }
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
+      return fail(res, "lat and lng must be valid numbers", 422);
+    }
+
+    await Driver.updateOne(
+      { _id: driver._id || driver.id },
+      { $set: { current_lat: latNum, current_lng: lngNum } }
+    );
+
+    await publishDriverLiveLocation(
+      { ...driver, current_lat: latNum, current_lng: lngNum },
+      { lat: latNum, lng: lngNum },
+      { bearing, heading }
+    );
+
+    return ok(res, null, "success");
   } catch {
     return fail(res);
   }
@@ -577,11 +613,106 @@ async function rewardsHistory(req, res) {
   }
 }
 
+async function qrCode(req, res) {
+  try {
+    const userId = req.user?.id;
+    const driver = await getDriverByUserId(userId);
+    if (!driver) return fail(res, "Driver not found", 404);
+    const user = await User.findById(driver.user_id).select({ name: 1, mobile: 1 }).lean();
+    const driverId = String(driver._id || driver.id);
+    const mobile = driver.mobile || user?.mobile || null;
+    const qr_data = JSON.stringify({
+      type: "driver",
+      driver_id: driverId,
+      mobile,
+    });
+    return ok(res, {
+      driver_id: driverId,
+      mobile,
+      name: user?.name || driver.name || null,
+      qr_data,
+    });
+  } catch {
+    return fail(res);
+  }
+}
+
+async function tripFareSummary(req, res) {
+  try {
+    const userId = req.user?.id;
+    const driver = await getDriverByUserId(userId);
+    if (!driver) return fail(res, "Driver not found", 404);
+    const driverId = driver._id || driver.id;
+    const requestId = req.query.request_id;
+
+    let trip = null;
+    if (requestId) {
+      if (!mongoose.Types.ObjectId.isValid(String(requestId))) {
+        return fail(res, "Invalid request_id", 422);
+      }
+      trip = await Request.findOne({ _id: requestId, driver_id: driverId }).lean();
+      if (!trip) return fail(res, "Request not found", 404);
+    } else {
+      trip = await Request.findOne({
+        driver_id: driverId,
+        is_completed: false,
+        is_cancelled: false,
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+    }
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const todayAgg = await Request.aggregate([
+      {
+        $match: {
+          driver_id: driverId,
+          is_completed: true,
+          completed_at: { $gte: start, $lte: end },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          trips: { $sum: 1 },
+          total_fare: { $sum: { $ifNull: ["$total", 0] } },
+        },
+      },
+    ]);
+
+    const current_trip = trip
+      ? {
+          request_id: trip._id,
+          request_number: trip.request_number,
+          base_fare: trip.accepted_ride_fare ?? trip.offerred_ride_fare ?? null,
+          additional_charge: trip.additional_charge ?? 0,
+          driver_tip: trip.driver_tip ?? 0,
+          total: trip.total ?? null,
+          payment_opt: trip.payment_opt,
+          payment_confirmed: trip.payment_confirmed,
+          is_completed: trip.is_completed,
+          is_cancelled: trip.is_cancelled,
+        }
+      : null;
+
+    return ok(res, {
+      today: todayAgg[0] || { trips: 0, total_fare: 0 },
+      current_trip,
+    });
+  } catch {
+    return fail(res);
+  }
+}
+
 module.exports = {
   documentsNeeded,
   uploadDocuments,
   diagnostics,
   toggleOnlineOffline,
+  updateLiveLocation,
   addMyRouteAddress,
   enableMyRouteBooking,
   todayEarnings,
@@ -603,5 +734,7 @@ module.exports = {
   updateBankInfo,
   loyaltyHistory,
   rewardsHistory,
+  qrCode,
+  tripFareSummary,
 };
 

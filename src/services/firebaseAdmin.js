@@ -136,6 +136,48 @@ async function sendFcmNotification(token, title, body, options = {}) {
   }
 }
 
+/**
+ * OTP over FCM: data payload for client handlers + visible notification.
+ * Requires FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS.
+ */
+async function sendFcmOtpMessage(token, otp, { mobile } = {}) {
+  if (!token) return false;
+  const admin = tryLoadAdmin();
+  if (!admin || !initializeFirebaseAdmin()) {
+    console.warn("[fcm] OTP push skipped: Firebase admin not configured");
+    return false;
+  }
+  const otpStr = String(otp);
+  const data = {
+    type: "otp",
+    otp: otpStr,
+    ...(mobile != null && mobile !== "" ? { mobile: String(mobile) } : {}),
+  };
+  const title = "Verification code";
+  const body = `Your OTP is ${otpStr}`;
+  try {
+    await admin.messaging().send({
+      token,
+      data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v == null ? "" : String(v)])),
+      notification: { title, body },
+      android: { priority: "high" },
+      apns: {
+        headers: { "apns-priority": "10" },
+        payload: {
+          aps: {
+            alert: { title, body },
+            sound: "default",
+          },
+        },
+      },
+    });
+    return true;
+  } catch (err) {
+    console.warn("[fcm] OTP push failed:", err.message);
+    return false;
+  }
+}
+
 module.exports = {
   tryLoadAdmin,
   initializeFirebaseAdmin,
@@ -144,4 +186,5 @@ module.exports = {
   updateRealtimeValue,
   rtdbNow,
   sendFcmNotification,
+  sendFcmOtpMessage,
 };

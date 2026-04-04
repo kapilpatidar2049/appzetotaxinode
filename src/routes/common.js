@@ -85,6 +85,11 @@ commonRoutes.get(
 
 commonRoutes.get("/common/list", authenticate, commonController.ticketList);
 
+// Complaints (ride / service complaints — titles + submit)
+commonRoutes.get("/common/complaint-titles", authenticate, commonController.complaintTitles);
+
+commonRoutes.post("/common/make-complaint", authenticate, body, commonController.makeComplaint);
+
 // Preferences
 commonRoutes.get("/common/preferences", authenticate, commonController.preferences);
 
@@ -121,7 +126,17 @@ commonRoutes.get("/common/mobile/privacy", commonController.mobilePrivacy);
 
 commonRoutes.get("/common/mobile/terms", commonController.mobileTerms);
 
-// Vehicle Type routes
+commonRoutes.get("/common/car/makes", commonController.carMakes);
+
+commonRoutes.get(
+  "/common/car/models/:make",
+  validateParams(schemas.params.carMake),
+  commonController.carModelsByMake
+);
+
+// Vehicle Type routes — `/types/service` must be registered before `/types/:service_location`
+commonRoutes.get("/types/service", commonController.vehicleTypesServicePath);
+
 commonRoutes.get(
   "/types/:service_location",
   validateParams(schemas.params.service_location),

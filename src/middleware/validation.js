@@ -79,6 +79,7 @@ const schemas = {
     requestmodel: Joi.object({ requestmodel: mongoId.required() }),
     request: Joi.object({ request: mongoId.required() }),
     service_location: Joi.object({ service_location: mongoId.required() }),
+    carMake: Joi.object({ make: mongoId.required() }),
     latLng: Joi.object({
       lat: Joi.string().required(),
       lng: Joi.string().required(),
@@ -94,6 +95,7 @@ const schemas = {
     mobileOtp: Joi.object({
       mobile: Joi.string().trim().required(),
       country_code: Joi.string().trim().allow("", null).optional(),
+      device_token: Joi.string().trim().allow("", null).optional(),
     }),
 
     validateSmsOtp: Joi.object({

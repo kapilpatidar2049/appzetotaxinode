@@ -32,6 +32,8 @@ const DriverSchema = new mongoose.Schema(
     my_route_lat: Number,
     my_route_lng: Number,
     my_route_address: String,
+    current_lat: Number,
+    current_lng: Number,
     enable_my_route_booking: { type: Boolean, default: false },
   },
   { timestamps: true }

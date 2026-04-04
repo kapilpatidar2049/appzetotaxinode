@@ -156,25 +156,32 @@ apiCommonRoutes.get("/translation/list", async (req, res, next) => {
 // ServiceLocation (auth middleware in Laravel is handled elsewhere)
 apiCommonRoutes.get("/servicelocation", authenticate, async (req, res, next) => {
   try {
-    let rows;
-    
-      const serviceLocations = await ServiceLocation.find({ active: true }).select({
-        name: 1,
-        currency_code: 1,
-        timezone: 1,
-        active: 1,
-      });
+    const serviceLocations = await ServiceLocation.find({ active: true })
+      .populate("country_id", "currency_name currency_symbol currency_code name")
+      .sort({ name: 1 })
+      .lean();
 
-      rows = serviceLocations.map((location) => ({
-        id: location._id,
-        name: location.name,
-        currency_name: location.currency_code || null,
-        currency_symbol: null,
-        currency_code: location.currency_code || null,
-        timezone: location.timezone || null,
+    const rows = serviceLocations.map((location) => {
+      const country =
+        location.country_id && typeof location.country_id === "object"
+          ? location.country_id
+          : null;
+      const name = location.name ?? "";
+      const translation_dataset = JSON.stringify({
+        en: { locale: "en", name },
+      });
+      const currency_code = location.currency_code || country?.currency_code || "";
+      return {
+        id: String(location._id),
+        name,
+        currency_name: country?.currency_name ?? "",
+        currency_symbol: country?.currency_symbol ?? "",
+        currency_code,
+        timezone: location.timezone ?? "",
         active: location.active ? 1 : 0,
-      }));
-    
+        translation_dataset,
+      };
+    });
 
     res.json({
       success: true,

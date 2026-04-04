@@ -10,7 +10,9 @@
     "seed:endpoints": "node src/seeders/endpointSeeder.js",
     "seed:db": "node src/seeders/DatabaseSeeder.js",
     "seed:extract-php": "node scripts/regenerate-php-json.js",
-    "postman:collection": "node scripts/generate-postman-collection.js"
+    "postman:collection": "node scripts/generate-postman-collection.js",
+    "postman:partner": "node scripts/generate-partner-app-postman-collection.js",
+    "postman:user": "node scripts/generate-user-app-postman-collection.js"
   },
   "dependencies": {
     "axios": "^1.13.6",
