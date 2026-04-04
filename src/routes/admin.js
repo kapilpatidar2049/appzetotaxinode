@@ -27,6 +27,7 @@ adminRoutes.use("/service-locations", require("./adminServiceLocations"));
 // Backward-compatible alias used by some clients.
 adminRoutes.use("/service_locations", require("./adminServiceLocations"));
 adminRoutes.use("/banners", require("./adminBanners"));
+adminRoutes.use("/onboarding-screens", require("./adminOnboardingScreens"));
 adminRoutes.use("/zones", require("./adminZones"));
 adminRoutes.use("/airports", require("./adminAirports"));
 adminRoutes.use("/countries", require("./adminCountries"));
